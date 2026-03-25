@@ -1,3 +1,4 @@
+
 <!-- Quiz Gaming | Créé le : 2025-03-25 | Quiz de 10 questions sur le gaming, envoie les réponses par email -->
 <!DOCTYPE html>
 <html lang="fr">
@@ -117,18 +118,24 @@
         <form id="quizForm">
             <div class="question-card">
                 <div class="question-number">1</div>
+                <h3>Ton adresse email ? <span class="required">*</span></h3>
+                <input type="email" id="email" placeholder="ton.email@exemple.com" required>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number">2</div>
                 <h3>Quel est ton pseudo de gamer ? <span class="required">*</span></h3>
                 <input type="text" id="pseudo" placeholder="Ton pseudo..." required>
             </div>
 
             <div class="question-card">
-                <div class="question-number">2</div>
+                <div class="question-number">3</div>
                 <h3>Quel est ton jeu prefere de tous les temps ? <span class="required">*</span></h3>
                 <input type="text" id="jeuPrefere" placeholder="Ex: Minecraft, GTA V, Fortnite..." required>
             </div>
 
             <div class="question-card">
-                <div class="question-number">3</div>
+                <div class="question-number">4</div>
                 <h3>Sur quelle plateforme joues-tu principalement ?</h3>
                 <div class="radio-group">
                     <div class="radio-option"><input type="radio" name="plateforme" id="pc" value="PC"><label for="pc">PC</label></div>
@@ -140,7 +147,7 @@
             </div>
 
             <div class="question-card">
-                <div class="question-number">4</div>
+                <div class="question-number">5</div>
                 <h3>Quels genres de jeux aimes-tu ? (plusieurs choix possibles)</h3>
                 <div class="checkbox-group">
                     <div class="checkbox-option"><input type="checkbox" id="fps" value="FPS"><label for="fps">FPS / Shooter</label></div>
@@ -155,7 +162,7 @@
             </div>
 
             <div class="question-card">
-                <div class="question-number">5</div>
+                <div class="question-number">6</div>
                 <h3>Combien d'heures par semaine joues-tu en moyenne ?</h3>
                 <select id="heures">
                     <option value="">-- Choisis --</option>
@@ -168,7 +175,7 @@
             </div>
 
             <div class="question-card">
-                <div class="question-number">6</div>
+                <div class="question-number">7</div>
                 <h3>Tu preferes jouer en solo ou en multi ?</h3>
                 <div class="radio-group">
                     <div class="radio-option"><input type="radio" name="mode" id="solo" value="Solo"><label for="solo">Solo</label></div>
@@ -178,7 +185,7 @@
             </div>
 
             <div class="question-card">
-                <div class="question-number">7</div>
+                <div class="question-number">8</div>
                 <h3>Note ton niveau de skill de 1 a 10 :</h3>
                 <div class="range-container">
                     <span>1</span>
@@ -189,19 +196,19 @@
             </div>
 
             <div class="question-card">
-                <div class="question-number">8</div>
+                <div class="question-number">9</div>
                 <h3>Quel jeu attends-tu le plus en ce moment ?</h3>
                 <input type="text" id="jeuAttendu" placeholder="Le jeu que tu attends avec impatience...">
             </div>
 
             <div class="question-card">
-                <div class="question-number">9</div>
+                <div class="question-number">10</div>
                 <h3>Quel est le jeu qui t'a le plus marque dans ta vie ?</h3>
                 <input type="text" id="jeuMarquant" placeholder="Ce jeu inoubliable...">
             </div>
 
             <div class="question-card">
-                <div class="question-number">10</div>
+                <div class="question-number">11</div>
                 <h3>Un message ou commentaire a ajouter ?</h3>
                 <textarea id="commentaire" placeholder="Dis ce que tu veux ici..."></textarea>
             </div>
@@ -219,6 +226,7 @@
             btn.textContent = 'Envoi en cours...';
 
             var pseudo = document.getElementById('pseudo').value;
+            var email = document.getElementById('email').value;
             var jeuPrefere = document.getElementById('jeuPrefere').value;
             var plateformeEl = document.querySelector('input[name="plateforme"]:checked');
             var plateforme = plateformeEl ? plateformeEl.value : 'Non precise';
@@ -234,6 +242,7 @@
 
             var data = {
                 Pseudo: pseudo,
+                Email: email,
                 "Jeu Prefere": jeuPrefere,
                 Plateforme: plateforme,
                 Genres: genres.join(', ') || 'Non precise',
