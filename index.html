@@ -1,0 +1,271 @@
+<!-- Quiz Gaming | Créé le : 2025-03-25 | Quiz de 10 questions sur le gaming, envoie les réponses par email -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Gaming</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh; color: #fff; padding: 20px;
+        }
+        .container { max-width: 700px; margin: 0 auto; }
+        header { text-align: center; padding: 30px 0; }
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #ff6ec4, #7873f5);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        header p { color: #aaa; font-size: 1.1rem; }
+        .question-card {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 16px; padding: 25px; margin-bottom: 20px;
+            backdrop-filter: blur(10px); transition: transform 0.2s;
+        }
+        .question-card:hover { transform: translateY(-2px); }
+        .question-number {
+            display: inline-block; background: linear-gradient(135deg, #ff6ec4, #7873f5);
+            color: #fff; width: 32px; height: 32px; border-radius: 50%;
+            text-align: center; line-height: 32px; font-weight: bold;
+            font-size: 0.9rem; margin-bottom: 12px;
+        }
+        .question-card h3 { font-size: 1.15rem; margin-bottom: 15px; color: #e0e0e0; }
+        input[type="text"], textarea, select {
+            width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 10px;
+            color: #fff; font-size: 1rem; outline: none; transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, textarea:focus, select:focus { border-color: #7873f5; }
+        select option { background: #302b63; color: #fff; }
+        textarea { resize: vertical; min-height: 80px; }
+        .radio-group { display: flex; flex-wrap: wrap; gap: 10px; }
+        .radio-option { flex: 1; min-width: 120px; }
+        .radio-option input[type="radio"] { display: none; }
+        .radio-option label {
+            display: block; padding: 10px 16px; background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+            text-align: center; cursor: pointer; transition: all 0.3s;
+        }
+        .radio-option input[type="radio"]:checked + label {
+            background: linear-gradient(135deg, #ff6ec4, #7873f5); border-color: transparent;
+        }
+        .radio-option label:hover { background: rgba(255,255,255,0.15); }
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
+        .checkbox-option { min-width: 140px; }
+        .checkbox-option input[type="checkbox"] { display: none; }
+        .checkbox-option label {
+            display: block; padding: 10px 16px; background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+            text-align: center; cursor: pointer; transition: all 0.3s;
+        }
+        .checkbox-option input[type="checkbox"]:checked + label {
+            background: linear-gradient(135deg, #ff6ec4, #7873f5); border-color: transparent;
+        }
+        .checkbox-option label:hover { background: rgba(255,255,255,0.15); }
+        .range-container { display: flex; align-items: center; gap: 15px; }
+        input[type="range"] {
+            flex: 1; -webkit-appearance: none; height: 6px;
+            background: rgba(255,255,255,0.2); border-radius: 3px; outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 20px; height: 20px;
+            background: linear-gradient(135deg, #ff6ec4, #7873f5);
+            border-radius: 50%; cursor: pointer;
+        }
+        .range-value { font-size: 1.2rem; font-weight: bold; color: #7873f5; min-width: 40px; text-align: center; }
+        .btn-send {
+            display: block; width: 100%; padding: 16px;
+            background: linear-gradient(135deg, #ff6ec4, #7873f5);
+            color: #fff; border: none; border-radius: 14px;
+            font-size: 1.2rem; font-weight: bold; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px; margin-bottom: 40px;
+        }
+        .btn-send:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(120,115,245,0.4); }
+        .btn-send:active { transform: translateY(0); }
+        .btn-send:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .required { color: #ff6ec4; }
+        .success-msg {
+            display: none; text-align: center; padding: 40px 20px;
+            background: rgba(40, 167, 69, 0.15); border: 1px solid rgba(40, 167, 69, 0.4);
+            border-radius: 16px; margin-bottom: 40px;
+        }
+        .success-msg h2 { color: #28a745; font-size: 1.8rem; margin-bottom: 10px; }
+        .success-msg p { color: #ccc; font-size: 1.1rem; }
+        @media (max-width: 500px) {
+            header h1 { font-size: 1.8rem; }
+            .radio-option, .checkbox-option { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Quiz Gaming</h1>
+            <p>Reponds aux questions et partage ton profil de gamer !</p>
+        </header>
+
+        <div class="success-msg" id="successMsg">
+            <h2>Merci !</h2>
+            <p>Tes reponses ont bien ete envoyees !</p>
+        </div>
+
+        <form id="quizForm">
+            <div class="question-card">
+                <div class="question-number">1</div>
+                <h3>Quel est ton pseudo de gamer ? <span class="required">*</span></h3>
+                <input type="text" id="pseudo" placeholder="Ton pseudo..." required>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number">2</div>
+                <h3>Quel est ton jeu prefere de tous les temps ? <span class="required">*</span></h3>
+                <input type="text" id="jeuPrefere" placeholder="Ex: Minecraft, GTA V, Fortnite..." required>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number">3</div>
+                <h3>Sur quelle plateforme joues-tu principalement ?</h3>
+                <div class="radio-group">
+                    <div class="radio-option"><input type="radio" name="plateforme" id="pc" value="PC"><label for="pc">PC</label></div>
+                    <div class="radio-option"><input type="radio" name="plateforme" id="ps5" value="PlayStation"><label for="ps5">PlayStation</label></div>
+                    <div class="radio-option"><input type="radio" name="plateforme" id="xbox" value="Xbox"><label for="xbox">Xbox</label></div>
+                    <div class="radio-option"><input type="radio" name="plateforme" id="switch" value="Nintendo Switch"><label for="switch">Switch</label></div>
+                    <div class="radio-option"><input type="radio" name="plateforme" id="mobile" value="Mobile"><label for="mobile">Mobile</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number">4</div>
+                <h3>Quels genres de jeux aimes-tu ? (plusieurs choix possibles)</h3>
+                <div class="checkbox-group">
+                    <div class="checkbox-option"><input type="checkbox" id="fps" value="FPS"><label for="fps">FPS / Shooter</label></div>
+                    <div class="checkbox-option"><input type="checkbox" id="rpg" value="RPG"><label for="rpg">RPG</label></div>
+                    <div class="checkbox-option"><input type="checkbox" id="aventure" value="Aventure"><label for="aventure">Aventure</label></div>
+                    <div class="checkbox-option"><input type="checkbox" id="sport" value="Sport"><label for="sport">Sport</label></div>
+                    <div class="checkbox-option"><input type="checkbox" id="strategie" value="Strategie"><label for="strategie">Strategie</label></div>
+                    <div class="checkbox-option"><input type="checkbox" id="horreur" value="Horreur"><label for="horreur">Horreur</label></div>
+                    <div class="checkbox-option"><input type="checkbox" id="battle-royale" value="Battle Royale"><label for="battle-royale">Battle Royale</label></div>
+                    <div class="checkbox-option"><input type="checkbox" id="simulation" value="Simulation"><label for="simulation">Simulation</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number">5</div>
+                <h3>Combien d'heures par semaine joues-tu en moyenne ?</h3>
+                <select id="heures">
+                    <option value="">-- Choisis --</option>
+                    <option value="Moins de 5h">Moins de 5h</option>
+                    <option value="5 a 10h">5 a 10h</option>
+                    <option value="10 a 20h">10 a 20h</option>
+                    <option value="20 a 30h">20 a 30h</option>
+                    <option value="Plus de 30h">Plus de 30h (no life !)</option>
+                </select>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number">6</div>
+                <h3>Tu preferes jouer en solo ou en multi ?</h3>
+                <div class="radio-group">
+                    <div class="radio-option"><input type="radio" name="mode" id="solo" value="Solo"><label for="solo">Solo</label></div>
+                    <div class="radio-option"><input type="radio" name="mode" id="multi" value="Multijoueur"><label for="multi">Multijoueur</label></div>
+                    <div class="radio-option"><input type="radio" name="mode" id="les-deux" value="Les deux"><label for="les-deux">Les deux</label></div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number">7</div>
+                <h3>Note ton niveau de skill de 1 a 10 :</h3>
+                <div class="range-container">
+                    <span>1</span>
+                    <input type="range" id="skill" min="1" max="10" value="5" oninput="document.getElementById('skillVal').textContent=this.value">
+                    <span>10</span>
+                    <div class="range-value" id="skillVal">5</div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number">8</div>
+                <h3>Quel jeu attends-tu le plus en ce moment ?</h3>
+                <input type="text" id="jeuAttendu" placeholder="Le jeu que tu attends avec impatience...">
+            </div>
+
+            <div class="question-card">
+                <div class="question-number">9</div>
+                <h3>Quel est le jeu qui t'a le plus marque dans ta vie ?</h3>
+                <input type="text" id="jeuMarquant" placeholder="Ce jeu inoubliable...">
+            </div>
+
+            <div class="question-card">
+                <div class="question-number">10</div>
+                <h3>Un message ou commentaire a ajouter ?</h3>
+                <textarea id="commentaire" placeholder="Dis ce que tu veux ici..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-send" id="btnSend">Envoyer mes reponses</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('quizForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var btn = document.getElementById('btnSend');
+            btn.disabled = true;
+            btn.textContent = 'Envoi en cours...';
+
+            var pseudo = document.getElementById('pseudo').value;
+            var jeuPrefere = document.getElementById('jeuPrefere').value;
+            var plateformeEl = document.querySelector('input[name="plateforme"]:checked');
+            var plateforme = plateformeEl ? plateformeEl.value : 'Non precise';
+            var genres = [];
+            document.querySelectorAll('.checkbox-group input:checked').forEach(function(cb) { genres.push(cb.value); });
+            var heures = document.getElementById('heures').value || 'Non precise';
+            var modeEl = document.querySelector('input[name="mode"]:checked');
+            var mode = modeEl ? modeEl.value : 'Non precise';
+            var skill = document.getElementById('skill').value;
+            var jeuAttendu = document.getElementById('jeuAttendu').value || 'Non precise';
+            var jeuMarquant = document.getElementById('jeuMarquant').value || 'Non precise';
+            var commentaire = document.getElementById('commentaire').value || 'Aucun';
+
+            var data = {
+                Pseudo: pseudo,
+                "Jeu Prefere": jeuPrefere,
+                Plateforme: plateforme,
+                Genres: genres.join(', ') || 'Non precise',
+                "Heures par semaine": heures,
+                "Mode de jeu": mode,
+                "Niveau Skill": skill + '/10',
+                "Jeu Attendu": jeuAttendu,
+                "Jeu Marquant": jeuMarquant,
+                Commentaire: commentaire,
+                _subject: 'Quiz Gaming - Reponse de ' + pseudo
+            };
+
+            fetch('https://formsubmit.co/ajax/mistergamerlug@gmail.com', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(result) {
+                document.getElementById('quizForm').style.display = 'none';
+                document.getElementById('successMsg').style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            })
+            .catch(function(error) {
+                btn.disabled = false;
+                btn.textContent = 'Envoyer mes reponses';
+                alert('Erreur lors de l\'envoi. Reessaye !');
+            });
+        });
+    </script>
+</body>
+</html>
