@@ -1,0 +1,34 @@
+name: Send Verification Email
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: 'Email destinataire'
+        required: true
+      code:
+        description: 'Code de vérification'
+        required: true
+
+jobs:
+  send-email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Envoyer le code par email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.GMAIL_USER }}
+          password: ${{ secrets.GMAIL_PASS }}
+          subject: "Ton code Game Studio"
+          to: ${{ inputs.email }}
+          from: Game Studio <${{ secrets.GMAIL_USER }}>
+          body: |
+            Bonjour !
+
+            Ton code de connexion Game Studio est :
+
+            ${{ inputs.code }}
+
+            Ce code expire dans 10 minutes.

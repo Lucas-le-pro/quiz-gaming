@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Vérification - Game Studio</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0d0d1a; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .container { width: 420px; text-align: center; }
+        .icon { font-size: 56px; margin-bottom: 20px; }
+        h1 { font-size: 24px; margin-bottom: 10px; }
+        .email { color: #8080ff; font-weight: 600; }
+        .subtitle { color: #666; font-size: 14px; margin-bottom: 36px; line-height: 1.6; }
+        .form-box { background: #1a1a2e; border-radius: 16px; padding: 36px; border: 1px solid #2a2a4a; }
+        input { width: 100%; padding: 16px; background: #0d0d1a; border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 28px; text-align: center; letter-spacing: 10px; outline: none; transition: border 0.2s; margin-bottom: 20px; }
+        input:focus { border-color: #6060ff; }
+        button { width: 100%; padding: 13px; background: linear-gradient(135deg, #6060ff, #ff60b0); border: none; border-radius: 8px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+        button:hover { opacity: 0.9; }
+        .error { color: #ff6060; font-size: 13px; margin-top: 12px; display: none; }
+        .back { margin-top: 16px; color: #555; font-size: 13px; cursor: pointer; }
+        .back:hover { color: #aaa; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="icon">✉</div>
+    <h1>Code envoyé à</h1>
+    <p class="subtitle"><span class="email">{{ email }}</span><br><br>Entre le code à 6 chiffres reçu par email.</p>
+    <div class="form-box">
+        <input type="text" id="code" placeholder="000000" maxlength="6" autofocus inputmode="numeric">
+        <button onclick="verify()">Accéder au site</button>
+        <p class="error" id="error-msg"></p>
+        <p class="back" onclick="location.href='/'">← Recommencer</p>
+    </div>
+</div>
+<script>
+async function verify() {
+    const code = document.getElementById('code').value.trim();
+    if (!code) return;
+
+    const res = await fetch('/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+    });
+    const data = await res.json();
+    if (data.ok) {
+        location.href = '/dashboard';
+    } else {
+        const e = document.getElementById('error-msg');
+        e.textContent = data.error;
+        e.style.display = 'block';
+    }
+}
+document.getElementById('code').addEventListener('keydown', e => { if (e.key === 'Enter') verify(); });
+</script>
+</body>
+</html>

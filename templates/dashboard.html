@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Game Studio</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0d0d1a; color: #fff; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+        nav { background: #1a1a2e; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2a4a; }
+        .nav-logo { font-size: 20px; font-weight: 700; background: linear-gradient(135deg, #6060ff, #ff60b0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-right { display: flex; gap: 16px; align-items: center; }
+        .nav-right a { color: #aaa; text-decoration: none; font-size: 14px; }
+        .nav-right a:hover { color: #fff; }
+        .btn { padding: 8px 18px; background: linear-gradient(135deg, #6060ff, #ff60b0); border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; font-size: 14px; }
+        .main { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        h2 { font-size: 24px; }
+        .projects { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .project-card { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 12px; padding: 20px; cursor: pointer; transition: border-color 0.2s; }
+        .project-card:hover { border-color: #6060ff; }
+        .project-name { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+        .project-meta { font-size: 12px; color: #666; display: flex; justify-content: space-between; }
+        .badge { padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge.public { background: #1a3a1a; color: #60ff60; }
+        .badge.private { background: #3a1a1a; color: #ff6060; }
+        .empty { text-align: center; padding: 60px; color: #444; }
+        .empty p { margin-top: 10px; font-size: 14px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+        .modal.show { display: flex; }
+        .modal-box { background: #1a1a2e; border-radius: 12px; padding: 30px; width: 360px; }
+        .modal-box h3 { margin-bottom: 20px; }
+        .modal-box input { width: 100%; padding: 12px; background: #0d0d1a; border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 14px; outline: none; margin-bottom: 16px; }
+        .modal-box input:focus { border-color: #6060ff; }
+        .modal-btns { display: flex; gap: 10px; }
+        .modal-btns button { flex: 1; padding: 11px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn-cancel { background: #2a2a4a; color: #aaa; }
+        .btn-create { background: linear-gradient(135deg, #6060ff, #ff60b0); color: #fff; }
+    </style>
+</head>
+<body>
+<nav>
+    <div class="nav-logo">🎮 Game Studio</div>
+    <div class="nav-right">
+        <a href="/explore">Explorer</a>
+        <span style="color:#666">|</span>
+        <span style="color:#aaa; font-size:14px">{{ user.username }}</span>
+        <a href="/logout">Déconnexion</a>
+    </div>
+</nav>
+<div class="main">
+    <div class="header">
+        <h2>Mes projets</h2>
+        <button class="btn" onclick="document.getElementById('new-modal').classList.add('show')">+ Nouveau projet</button>
+    </div>
+    {% if projects %}
+    <div class="projects">
+        {% for p in projects %}
+        <div class="project-card" onclick="location.href='/project/{{ p.id }}'">
+            <div class="project-name">{{ p.name }}</div>
+            <div class="project-meta">
+                <span>{{ p.updated_at.strftime('%d/%m/%Y') }}</span>
+                <span class="badge {{ 'public' if p.is_public else 'private' }}">{{ 'Public' if p.is_public else 'Privé' }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+        <div style="font-size:48px">🎮</div>
+        <p>Aucun projet. Crée ton premier jeu !</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="modal" id="new-modal">
+    <div class="modal-box">
+        <h3>Nouveau projet</h3>
+        <input type="text" id="project-name" placeholder="Nom du projet" autofocus>
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="document.getElementById('new-modal').classList.remove('show')">Annuler</button>
+            <button class="btn-create" onclick="createProject()">Créer</button>
+        </div>
+    </div>
+</div>
+<script>
+async function createProject() {
+    const name = document.getElementById('project-name').value.trim();
+    if (!name) return;
+    const res = await fetch('/project/new', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name }) });
+    const data = await res.json();
+    if (data.id) location.href = '/project/' + data.id;
+}
+document.getElementById('project-name').addEventListener('keydown', e => { if (e.key === 'Enter') createProject(); });
+</script>
+</body>
+</html>
