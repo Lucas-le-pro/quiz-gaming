@@ -1,0 +1,212 @@
+[index.html](https://github.com/user-attachments/files/26439572/index.html)
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LamaaGames</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0f;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+    }
+
+    .logo {
+      font-size: 3rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .tagline {
+      color: #666;
+      font-size: 0.95rem;
+      margin-bottom: 50px;
+      letter-spacing: 1px;
+    }
+
+    .card {
+      background: #13131a;
+      border: 1px solid #2a2a3a;
+      border-radius: 16px;
+      padding: 40px;
+      width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card h2 {
+      font-size: 1.2rem;
+      color: #ccc;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    input {
+      background: #0a0a0f;
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      padding: 14px 18px;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.2s;
+      width: 100%;
+    }
+
+    input:focus {
+      border-color: #7c3aed;
+    }
+
+    input::placeholder {
+      color: #444;
+    }
+
+    button {
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    button:hover { opacity: 0.9; }
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .message {
+      text-align: center;
+      font-size: 0.9rem;
+      min-height: 20px;
+      color: #888;
+    }
+
+    .message.success { color: #4ade80; }
+    .message.error   { color: #f87171; }
+
+    .step { display: none; flex-direction: column; gap: 20px; }
+    .step.active { display: flex; }
+  </style>
+</head>
+<body>
+
+  <div class="logo">LamaaGames</div>
+  <p class="tagline">Crée ton compte</p>
+
+  <div class="card">
+
+    <!-- ÉTAPE 1 : email -->
+    <div class="step active" id="step-email">
+      <h2>Entre ton adresse email</h2>
+      <input type="email" id="input-email" placeholder="exemple@gmail.com">
+      <button id="btn-email">Envoyer le code</button>
+      <p class="message" id="msg-email"></p>
+    </div>
+
+    <!-- ÉTAPE 2 : code (à venir) -->
+    <div class="step" id="step-code">
+      <h2>Entre le code reçu par email</h2>
+      <input type="text" id="input-code" placeholder="Code à 6 chiffres" maxlength="6">
+      <button id="btn-code">Valider</button>
+      <p class="message" id="msg-code"></p>
+    </div>
+
+  </div>
+
+  <script>
+    let generatedCode = '';
+    let userEmail = '';
+
+    function generateCode() {
+      return Math.floor(100000 + Math.random() * 900000).toString();
+    }
+
+    // ÉTAPE 1 — envoi du code par email
+    document.getElementById('btn-email').addEventListener('click', async () => {
+      const emailInput = document.getElementById('input-email');
+      const msg = document.getElementById('msg-email');
+      const btn = document.getElementById('btn-email');
+      const email = emailInput.value.trim();
+
+      if (!email || !email.includes('@')) {
+        msg.textContent = 'Entre un email valide.';
+        msg.className = 'message error';
+        return;
+      }
+
+      generatedCode = generateCode();
+      userEmail = email;
+      btn.disabled = true;
+      msg.textContent = 'Envoi en cours...';
+      msg.className = 'message';
+
+      try {
+        await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(email), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            _subject: 'Ton code LamaaGames',
+            message: `Bonjour !\n\nTon code de vérification LamaaGames est :\n\n${generatedCode}\n\nNe le partage à personne.\n\n— LamaaGames`
+          })
+        });
+
+        msg.textContent = `Code envoyé sur ${email}`;
+        msg.className = 'message success';
+
+        setTimeout(() => {
+          document.getElementById('step-email').classList.remove('active');
+          document.getElementById('step-code').classList.add('active');
+        }, 1200);
+
+      } catch (e) {
+        msg.textContent = 'Erreur lors de l\'envoi. Réessaie.';
+        msg.className = 'message error';
+        btn.disabled = false;
+      }
+    });
+
+    // Entrée clavier sur email
+    document.getElementById('input-email').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('btn-email').click();
+    });
+
+    // ÉTAPE 2 — vérification du code
+    document.getElementById('btn-code').addEventListener('click', () => {
+      const input = document.getElementById('input-code').value.trim();
+      const msg = document.getElementById('msg-code');
+
+      if (input === generatedCode) {
+        msg.textContent = 'Code correct !';
+        msg.className = 'message success';
+        // Étape suivante à venir
+      } else {
+        msg.textContent = 'Code incorrect. Réessaie.';
+        msg.className = 'message error';
+      }
+    });
+
+    // Entrée clavier sur code
+    document.getElementById('input-code').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('btn-code').click();
+    });
+  </script>
+
+</body>
+</html>
