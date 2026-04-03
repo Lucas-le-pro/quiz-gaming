@@ -139,8 +139,8 @@
   </div>
 
   <script>
-    let generatedCode = sessionStorage.getItem('lgCode') || '';
-    let userEmail = sessionStorage.getItem('lgEmail') || '';
+    let generatedCode = localStorage.getItem('lgCode') || '';
+    let userEmail = localStorage.getItem('lgEmail') || '';
 
     // Si un code existe déjà, passer directement à l'étape code
     if (generatedCode && userEmail) {
@@ -167,8 +167,8 @@
 
       generatedCode = generateCode();
       userEmail = email;
-      sessionStorage.setItem('lgCode', generatedCode);
-      sessionStorage.setItem('lgEmail', userEmail);
+      localStorage.setItem('lgCode', generatedCode);
+      localStorage.setItem('lgEmail', userEmail);
       btn.disabled = true;
       msg.textContent = 'Envoi en cours...';
       msg.className = 'message';
@@ -211,8 +211,8 @@
       if (input === generatedCode) {
         msg.textContent = 'Code correct !';
         msg.className = 'message success';
-        sessionStorage.removeItem('lgCode');
-        sessionStorage.removeItem('lgEmail');
+        localStorage.removeItem('lgCode');
+        localStorage.removeItem('lgEmail');
         setTimeout(() => {
           document.getElementById('step-code').classList.remove('active');
           document.getElementById('step-pseudo').classList.add('active');
@@ -226,8 +226,8 @@
 
     // Retour à l'étape email
     document.getElementById('btn-retour').addEventListener('click', () => {
-      sessionStorage.removeItem('lgCode');
-      sessionStorage.removeItem('lgEmail');
+      localStorage.removeItem('lgCode');
+      localStorage.removeItem('lgEmail');
       generatedCode = '';
       userEmail = '';
       document.getElementById('step-code').classList.remove('active');
