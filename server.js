@@ -15,9 +15,10 @@ app.use(express.json());
 app.get('/', (req, res) => res.send('LamaaGames server OK'));
 
 // Stockage en mémoire
-const amis = {};       // amis[pseudo] = [liste d'amis]
-const invitations = {}; // invitations[pseudo] = [liste d'inviteurs en attente]
-const messages = {};   // messages[clé] = [liste de messages]
+const amis = {};
+const invitations = {};
+const messages = {};
+const jeuxEnAttente = []; // [{ nom, description, proposePar, date }]
 
 function cleAmis(a, b) {
   return [a, b].sort().join('_');
@@ -79,6 +80,21 @@ app.post('/refuser', (req, res) => {
 app.get('/messages/:a/:b', (req, res) => {
   const cle = cleAmis(req.params.a, req.params.b);
   res.json(messages[cle] || []);
+});
+
+// Récupérer tous les jeux en attente
+app.get('/jeux', (req, res) => {
+  res.json(jeuxEnAttente);
+});
+
+// Proposer un jeu
+app.post('/jeux', (req, res) => {
+  const { nom, description, proposePar } = req.body;
+  if (!nom || !proposePar) return res.status(400).json({ error: 'Manque nom ou proposePar' });
+  const jeu = { nom, description: description || '', proposePar, date: Date.now() };
+  jeuxEnAttente.unshift(jeu);
+  io.emit('nouveau-jeu', jeu);
+  res.json({ ok: true });
 });
 
 // Socket.io — connexion
