@@ -138,8 +138,14 @@
   </div>
 
   <script>
-    let generatedCode = '';
-    let userEmail = '';
+    let generatedCode = sessionStorage.getItem('lgCode') || '';
+    let userEmail = sessionStorage.getItem('lgEmail') || '';
+
+    // Si un code existe déjà, passer directement à l'étape code
+    if (generatedCode && userEmail) {
+      document.getElementById('step-email').classList.remove('active');
+      document.getElementById('step-code').classList.add('active');
+    }
 
     function generateCode() {
       return Math.floor(100000 + Math.random() * 900000).toString();
@@ -160,6 +166,8 @@
 
       generatedCode = generateCode();
       userEmail = email;
+      sessionStorage.setItem('lgCode', generatedCode);
+      sessionStorage.setItem('lgEmail', userEmail);
       btn.disabled = true;
       msg.textContent = 'Envoi en cours...';
       msg.className = 'message';
@@ -202,6 +210,8 @@
       if (input === generatedCode) {
         msg.textContent = 'Code correct !';
         msg.className = 'message success';
+        sessionStorage.removeItem('lgCode');
+        sessionStorage.removeItem('lgEmail');
         setTimeout(() => {
           document.getElementById('step-code').classList.remove('active');
           document.getElementById('step-pseudo').classList.add('active');
