@@ -2,6 +2,12 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const { createClient } = require('@supabase/supabase-js');
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
 
 const app = express();
 const server = http.createServer(app);
@@ -108,24 +114,25 @@ app.post('/jeux/url', (req, res) => {
   res.json({ ok: true });
 });
 
-// Mettre en ligne un jeu (via upload de fichier)
-app.post('/jeux/upload', (req, res) => {
+// Mettre en ligne un jeu (via upload de fichier → Supabase Storage)
+app.post('/jeux/upload', async (req, res) => {
   const { id, pseudo, contenu, nomFichier } = req.body;
   const jeu = jeuxEnAttente.find(j => j.id === id && j.proposePar === pseudo);
   if (!jeu) return res.status(403).json({ error: 'Non autorisé' });
-  jeu.contenu = contenu;
-  jeu.nomFichier = nomFichier;
-  jeu.url = `/jeux/jouer/${id}`;
+
+  const chemin = `${id}/${nomFichier}`;
+  const buffer = Buffer.from(contenu, 'utf-8');
+
+  const { error } = await supabase.storage
+    .from('jeux storage')
+    .upload(chemin, buffer, { contentType: 'text/html', upsert: true });
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  const { data } = supabase.storage.from('jeux storage').getPublicUrl(chemin);
+  jeu.url = data.publicUrl;
   io.emit('jeu-mis-en-ligne', jeu);
   res.json({ ok: true });
-});
-
-// Servir le fichier d'un jeu uploadé
-app.get('/jeux/jouer/:id', (req, res) => {
-  const jeu = jeuxEnAttente.find(j => j.id === req.params.id);
-  if (!jeu || !jeu.contenu) return res.status(404).send('Jeu introuvable');
-  res.setHeader('Content-Type', 'text/html');
-  res.send(jeu.contenu);
 });
 
 // Récupérer les stats d'un joueur
