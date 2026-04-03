@@ -119,12 +119,20 @@
       <p class="message" id="msg-email"></p>
     </div>
 
-    <!-- ÉTAPE 2 : code (à venir) -->
+    <!-- ÉTAPE 2 : code -->
     <div class="step" id="step-code">
       <h2>Entre le code reçu par email</h2>
       <input type="text" id="input-code" placeholder="Code à 6 chiffres" maxlength="6">
       <button id="btn-code">Valider</button>
       <p class="message" id="msg-code"></p>
+    </div>
+
+    <!-- ÉTAPE 3 : pseudo -->
+    <div class="step" id="step-pseudo">
+      <h2>Choisis ton pseudo</h2>
+      <input type="text" id="input-pseudo" placeholder="Ton pseudo" maxlength="20">
+      <button id="btn-pseudo">Envoyer</button>
+      <p class="message" id="msg-pseudo"></p>
     </div>
 
   </div>
@@ -194,7 +202,11 @@
       if (input === generatedCode) {
         msg.textContent = 'Code correct !';
         msg.className = 'message success';
-        // Étape suivante à venir
+        setTimeout(() => {
+          document.getElementById('step-code').classList.remove('active');
+          document.getElementById('step-pseudo').classList.add('active');
+          document.getElementById('input-pseudo').focus();
+        }, 1000);
       } else {
         msg.textContent = 'Code incorrect. Réessaie.';
         msg.className = 'message error';
@@ -204,6 +216,46 @@
     // Entrée clavier sur code
     document.getElementById('input-code').addEventListener('keydown', e => {
       if (e.key === 'Enter') document.getElementById('btn-code').click();
+    });
+
+    // ÉTAPE 3 — choix du pseudo
+    document.getElementById('btn-pseudo').addEventListener('click', async () => {
+      const pseudo = document.getElementById('input-pseudo').value.trim();
+      const msg = document.getElementById('msg-pseudo');
+      const btn = document.getElementById('btn-pseudo');
+
+      if (!pseudo || pseudo.length < 2) {
+        msg.textContent = 'Pseudo trop court (2 caractères minimum).';
+        msg.className = 'message error';
+        return;
+      }
+
+      btn.disabled = true;
+      msg.textContent = 'Envoi en cours...';
+      msg.className = 'message';
+
+      try {
+        await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(userEmail), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            _subject: 'Bienvenue sur LamaaGames !',
+            message: `Bonjour ${pseudo} !\n\nTon compte LamaaGames est créé.\n\nPseudo : ${pseudo}\nEmail : ${userEmail}\n\n— LamaaGames`
+          })
+        });
+
+        msg.textContent = `Email envoyé sur ${userEmail}`;
+        msg.className = 'message success';
+      } catch(e) {
+        msg.textContent = "Erreur lors de l'envoi. Réessaie.";
+        msg.className = 'message error';
+        btn.disabled = false;
+      }
+    });
+
+    // Entrée clavier sur pseudo
+    document.getElementById('input-pseudo').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('btn-pseudo').click();
     });
   </script>
 
