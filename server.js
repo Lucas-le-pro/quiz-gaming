@@ -18,7 +18,7 @@ app.get('/', (req, res) => res.send('LamaaGames server OK'));
 const amis = {};
 const invitations = {};
 const messages = {};
-const jeuxEnAttente = []; // [{ nom, description, proposePar, date }]
+const jeuxEnAttente = [];
 const stats = {};         // stats[pseudo][jeu] = { tempsJoue, ...statsJeu }
 
 function cleAmis(a, b) {
@@ -92,9 +92,19 @@ app.get('/jeux', (req, res) => {
 app.post('/jeux', (req, res) => {
   const { nom, description, proposePar } = req.body;
   if (!nom || !proposePar) return res.status(400).json({ error: 'Manque nom ou proposePar' });
-  const jeu = { nom, description: description || '', proposePar, date: Date.now() };
+  const jeu = { id: Date.now().toString(), nom, description: description || '', proposePar, url: null, date: Date.now() };
   jeuxEnAttente.unshift(jeu);
   io.emit('nouveau-jeu', jeu);
+  res.json({ ok: true });
+});
+
+// Mettre en ligne un jeu (ajouter l'URL)
+app.post('/jeux/url', (req, res) => {
+  const { id, pseudo, url } = req.body;
+  const jeu = jeuxEnAttente.find(j => j.id === id && j.proposePar === pseudo);
+  if (!jeu) return res.status(403).json({ error: 'Non autorisé' });
+  jeu.url = url;
+  io.emit('jeu-mis-en-ligne', jeu);
   res.json({ ok: true });
 });
 
