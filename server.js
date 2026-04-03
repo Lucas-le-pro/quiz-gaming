@@ -1,7 +1,6 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -9,8 +8,9 @@ const io = new Server(server, {
   cors: { origin: '*' }
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
+
+app.get('/', (req, res) => res.send('LamaaGames server OK'));
 
 // Stockage en mémoire
 const amis = {};       // amis[pseudo] = [liste d'amis]
