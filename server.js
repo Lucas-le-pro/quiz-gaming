@@ -98,7 +98,7 @@ app.post('/jeux', (req, res) => {
   res.json({ ok: true });
 });
 
-// Mettre en ligne un jeu (ajouter l'URL)
+// Mettre en ligne un jeu (via URL)
 app.post('/jeux/url', (req, res) => {
   const { id, pseudo, url } = req.body;
   const jeu = jeuxEnAttente.find(j => j.id === id && j.proposePar === pseudo);
@@ -106,6 +106,26 @@ app.post('/jeux/url', (req, res) => {
   jeu.url = url;
   io.emit('jeu-mis-en-ligne', jeu);
   res.json({ ok: true });
+});
+
+// Mettre en ligne un jeu (via upload de fichier)
+app.post('/jeux/upload', (req, res) => {
+  const { id, pseudo, contenu, nomFichier } = req.body;
+  const jeu = jeuxEnAttente.find(j => j.id === id && j.proposePar === pseudo);
+  if (!jeu) return res.status(403).json({ error: 'Non autorisé' });
+  jeu.contenu = contenu;
+  jeu.nomFichier = nomFichier;
+  jeu.url = `/jeux/jouer/${id}`;
+  io.emit('jeu-mis-en-ligne', jeu);
+  res.json({ ok: true });
+});
+
+// Servir le fichier d'un jeu uploadé
+app.get('/jeux/jouer/:id', (req, res) => {
+  const jeu = jeuxEnAttente.find(j => j.id === req.params.id);
+  if (!jeu || !jeu.contenu) return res.status(404).send('Jeu introuvable');
+  res.setHeader('Content-Type', 'text/html');
+  res.send(jeu.contenu);
 });
 
 // Récupérer les stats d'un joueur
