@@ -125,6 +125,7 @@
       <input type="text" id="input-code" placeholder="Code à 6 chiffres" maxlength="6">
       <button id="btn-code">Valider</button>
       <p class="message" id="msg-code"></p>
+      <p style="text-align:center; font-size:0.85rem; color:#555; cursor:pointer;" id="btn-retour">← Changer d'email / Renvoyer un code</p>
     </div>
 
     <!-- ÉTAPE 3 : pseudo -->
@@ -221,6 +222,19 @@
         msg.textContent = 'Code incorrect. Réessaie.';
         msg.className = 'message error';
       }
+    });
+
+    // Retour à l'étape email
+    document.getElementById('btn-retour').addEventListener('click', () => {
+      sessionStorage.removeItem('lgCode');
+      sessionStorage.removeItem('lgEmail');
+      generatedCode = '';
+      userEmail = '';
+      document.getElementById('step-code').classList.remove('active');
+      document.getElementById('step-email').classList.add('active');
+      document.getElementById('btn-email').disabled = false;
+      document.getElementById('msg-email').textContent = '';
+      document.getElementById('input-code').value = '';
     });
 
     // Entrée clavier sur code
