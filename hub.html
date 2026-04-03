@@ -183,14 +183,63 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      cursor: pointer;
       transition: border 0.2s;
+      position: relative;
     }
 
     .jeu-attente-card:hover { border-color: #7c3aed; }
+    .jeu-attente-card.en-ligne { cursor: pointer; border-color: #a855f7; }
+    .jeu-attente-card.en-ligne:hover { border-color: #fff; }
     .jeu-attente-nom { font-weight: 700; font-size: 1rem; }
     .jeu-attente-desc { color: #888; font-size: 0.85rem; }
     .jeu-attente-par { color: #a855f7; font-size: 0.8rem; }
+    .jeu-attente-badge {
+      font-size: 0.75rem;
+      color: #888;
+      background: #1a1a2a;
+      padding: 3px 8px;
+      border-radius: 20px;
+      align-self: flex-start;
+    }
+    .jeu-attente-badge.live { color: #4ade80; background: #0a2a1a; }
+
+    .btn-trois-points {
+      position: absolute;
+      top: 10px; right: 12px;
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .btn-trois-points:hover { background: #2a2a3a; color: #fff; }
+
+    /* MODAL URL */
+    #url-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 800;
+      align-items: center;
+      justify-content: center;
+    }
+    #url-overlay.active { display: flex; }
+    .url-card {
+      background: #13131a;
+      border: 1px solid #2a2a3a;
+      border-radius: 16px;
+      padding: 32px;
+      width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .url-card h3 { color: #ccc; font-size: 1rem; }
+    .url-fermer { color: #666; font-size: 0.85rem; cursor: pointer; text-align: center; }
+    .url-fermer:hover { color: #fff; }
 
     textarea {
       background: #0a0a0f;
@@ -424,6 +473,16 @@
 
   </div>
 
+  <!-- MODAL URL -->
+  <div id="url-overlay">
+    <div class="url-card">
+      <h3 id="url-titre">Mettre en ligne</h3>
+      <input type="url" id="url-input" placeholder="https://ton-jeu.com">
+      <button class="main" id="url-valider">Mettre en ligne</button>
+      <div class="url-fermer" id="url-fermer">Annuler</div>
+    </div>
+  </div>
+
   <!-- PROFIL AMI -->
   <div id="profil-overlay">
     <div class="profil-card">
@@ -586,22 +645,62 @@
       afficherJeux(jeux);
     }
 
+    let jeuEnCoursId = null;
+
     function afficherJeux(jeux) {
       const liste = document.getElementById('jeux-liste');
       if (jeux.length === 0) {
         liste.innerHTML = '<p style="color:#555; font-size:0.85rem;">Aucun jeu proposé pour l\'instant.</p>';
-      } else {
-        liste.innerHTML = jeux.map(j => `
-          <div class="jeu-attente-card" onclick="ouvrirProfilJoueur('${j.proposePar}')">
+        return;
+      }
+      liste.innerHTML = jeux.map(j => {
+        const estCreateur = j.proposePar === pseudo;
+        const estEnLigne = !!j.url;
+        return `
+          <div class="jeu-attente-card ${estEnLigne ? 'en-ligne' : ''}" id="jeu-${j.id}"
+            ${estEnLigne ? `onclick="window.open('${j.url}', '_blank')"` : `onclick="ouvrirProfil('${j.proposePar}')"`}>
+            ${estCreateur && !estEnLigne ? `<button class="btn-trois-points" onclick="event.stopPropagation(); ouvrirUrlModal('${j.id}', '${j.nom}')">···</button>` : ''}
             <div class="jeu-attente-nom">${j.nom}</div>
             ${j.description ? `<div class="jeu-attente-desc">${j.description}</div>` : ''}
             <div class="jeu-attente-par">Proposé par ${j.proposePar}</div>
+            <div class="jeu-attente-badge ${estEnLigne ? 'live' : ''}">${estEnLigne ? 'En ligne' : 'En attente'}</div>
           </div>
-        `).join('');
-      }
+        `;
+      }).join('');
     }
 
-    socket.on('nouveau-jeu', (jeu) => {
+    socket.on('nouveau-jeu', () => chargerJeux());
+    socket.on('jeu-mis-en-ligne', () => chargerJeux());
+
+    // Modal URL
+    function ouvrirUrlModal(id, nom) {
+      jeuEnCoursId = id;
+      document.getElementById('url-titre').textContent = `Mettre "${nom}" en ligne`;
+      document.getElementById('url-input').value = '';
+      document.getElementById('url-overlay').classList.add('active');
+    }
+
+    document.getElementById('url-fermer').addEventListener('click', () => {
+      document.getElementById('url-overlay').classList.remove('active');
+    });
+
+    document.getElementById('url-overlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('url-overlay'))
+        document.getElementById('url-overlay').classList.remove('active');
+    });
+
+    document.getElementById('url-valider').addEventListener('click', async () => {
+      const url = document.getElementById('url-input').value.trim();
+      if (!url || !url.startsWith('http')) {
+        document.getElementById('url-input').style.borderColor = '#f87171';
+        return;
+      }
+      await fetch(`${SERVER}/jeux/url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: jeuEnCoursId, pseudo, url })
+      });
+      document.getElementById('url-overlay').classList.remove('active');
       chargerJeux();
     });
 
@@ -625,9 +724,6 @@
       chargerJeux();
     });
 
-    function ouvrirProfilJoueur(joueur) {
-      ouvrirProfil(joueur);
-    }
 
     // ---- PROFIL AMI ----
     async function ouvrirProfil(ami) {
