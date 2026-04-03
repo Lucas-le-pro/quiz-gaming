@@ -174,6 +174,87 @@
     .ami-item:hover { border-color: #7c3aed; }
     .ami-item span { color: #888; font-size: 0.8rem; }
 
+    /* JEUX */
+    .jeux-grille {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .jeu-card {
+      background: #0a0a0f;
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      text-align: center;
+    }
+
+    .jeu-nom { font-weight: 700; font-size: 1rem; color: #fff; }
+    .jeu-badge {
+      font-size: 0.75rem;
+      color: #a855f7;
+      background: #1a0a2e;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid #a855f7;
+    }
+
+    /* PROFIL AMI */
+    #profil-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 800;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #profil-overlay.active { display: flex; }
+
+    .profil-card {
+      background: #13131a;
+      border: 1px solid #2a2a3a;
+      border-radius: 16px;
+      padding: 40px;
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-align: center;
+    }
+
+    .profil-avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 900;
+    }
+
+    .profil-pseudo { font-size: 1.4rem; font-weight: 700; }
+    .profil-tag { color: #666; font-size: 0.85rem; }
+    .profil-fermer {
+      margin-top: 8px;
+      padding: 10px 24px;
+      background: #0a0a0f;
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      color: #888;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .profil-fermer:hover { border-color: #7c3aed; color: #fff; }
+
     /* CHAT */
     #chat-panel {
       position: fixed;
@@ -278,6 +359,41 @@
       <div id="amis-liste">
         <p style="color:#555; font-size:0.85rem;">Aucun ami pour l'instant.</p>
       </div>
+    </div>
+
+    <!-- JEUX -->
+    <div class="hub-section">
+      <h3>Jeux</h3>
+      <div class="jeux-grille">
+        <div class="jeu-card">
+          <div class="jeu-nom">City Sim</div>
+          <div class="jeu-badge">Bientôt disponible</div>
+        </div>
+        <div class="jeu-card">
+          <div class="jeu-nom">Donjon</div>
+          <div class="jeu-badge">Bientôt disponible</div>
+        </div>
+        <div class="jeu-card">
+          <div class="jeu-nom">Tetris</div>
+          <div class="jeu-badge">Bientôt disponible</div>
+        </div>
+        <div class="jeu-card">
+          <div class="jeu-nom">Tower Defense</div>
+          <div class="jeu-badge">Bientôt disponible</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PROFIL AMI -->
+  <div id="profil-overlay">
+    <div class="profil-card">
+      <div class="profil-avatar" id="profil-avatar"></div>
+      <div class="profil-pseudo" id="profil-pseudo"></div>
+      <div class="profil-tag">LamaaGames</div>
+      <button class="main" id="profil-chat" style="width:100%;">Ouvrir le chat</button>
+      <div class="profil-fermer" id="profil-fermer">Fermer</div>
     </div>
   </div>
 
@@ -392,9 +508,9 @@
         liste.innerHTML = '<p style="color:#555; font-size:0.85rem;">Aucun ami pour l\'instant.</p>';
       } else {
         liste.innerHTML = amis.map(a => `
-          <div class="ami-item" onclick="ouvrirChat('${a}')">
+          <div class="ami-item" onclick="ouvrirProfil('${a}')">
             <strong>${a}</strong>
-            <span>Cliquer pour chatter</span>
+            <span>Voir le profil</span>
           </div>
         `).join('');
       }
@@ -421,6 +537,28 @@
 
     document.getElementById('input-ami').addEventListener('keydown', e => {
       if (e.key === 'Enter') document.getElementById('btn-inviter').click();
+    });
+
+    // ---- PROFIL AMI ----
+    function ouvrirProfil(ami) {
+      document.getElementById('profil-pseudo').textContent = ami;
+      document.getElementById('profil-avatar').textContent = ami[0].toUpperCase();
+      document.getElementById('profil-overlay').classList.add('active');
+
+      document.getElementById('profil-chat').onclick = () => {
+        document.getElementById('profil-overlay').classList.remove('active');
+        ouvrirChat(ami);
+      };
+    }
+
+    document.getElementById('profil-fermer').addEventListener('click', () => {
+      document.getElementById('profil-overlay').classList.remove('active');
+    });
+
+    // Fermer en cliquant dehors
+    document.getElementById('profil-overlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('profil-overlay'))
+        document.getElementById('profil-overlay').classList.remove('active');
     });
 
     // ---- CHAT ----
