@@ -473,10 +473,12 @@
 
   </div>
 
-  <!-- MODAL URL -->
+  <!-- MODAL UPLOAD -->
   <div id="url-overlay">
     <div class="url-card">
       <h3 id="url-titre">Mettre en ligne</h3>
+      <input type="file" id="url-fichier" accept=".html,.htm" style="color:#ccc; font-size:0.9rem;">
+      <p style="color:#555; font-size:0.8rem; text-align:center;">ou entre une URL</p>
       <input type="url" id="url-input" placeholder="https://ton-jeu.com">
       <button class="main" id="url-valider">Mettre en ligne</button>
       <div class="url-fermer" id="url-fermer">Annuler</div>
@@ -690,18 +692,34 @@
     });
 
     document.getElementById('url-valider').addEventListener('click', async () => {
+      const fichier = document.getElementById('url-fichier').files[0];
       const url = document.getElementById('url-input').value.trim();
-      if (!url || !url.startsWith('http')) {
+
+      if (fichier) {
+        // Upload du fichier
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          await fetch(`${SERVER}/jeux/upload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: jeuEnCoursId, pseudo, contenu: e.target.result, nomFichier: fichier.name })
+          });
+          document.getElementById('url-overlay').classList.remove('active');
+          chargerJeux();
+        };
+        reader.readAsText(fichier);
+      } else if (url && url.startsWith('http')) {
+        // URL directe
+        await fetch(`${SERVER}/jeux/url`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: jeuEnCoursId, pseudo, url })
+        });
+        document.getElementById('url-overlay').classList.remove('active');
+        chargerJeux();
+      } else {
         document.getElementById('url-input').style.borderColor = '#f87171';
-        return;
       }
-      await fetch(`${SERVER}/jeux/url`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: jeuEnCoursId, pseudo, url })
-      });
-      document.getElementById('url-overlay').classList.remove('active');
-      chargerJeux();
     });
 
     document.getElementById('btn-proposer').addEventListener('click', async () => {
