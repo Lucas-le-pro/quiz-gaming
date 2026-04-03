@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LamaaGames</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0f;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+    }
+
+    .logo {
+      font-size: 3rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .tagline {
+      color: #666;
+      font-size: 0.95rem;
+      margin-bottom: 50px;
+      letter-spacing: 1px;
+    }
+
+    .card {
+      background: #13131a;
+      border: 1px solid #2a2a3a;
+      border-radius: 16px;
+      padding: 40px;
+      width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card h2 {
+      font-size: 1.2rem;
+      color: #ccc;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .langues {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .langue-btn {
+      background: #0a0a0f;
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      padding: 16px;
+      color: #ccc;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .langue-btn:hover {
+      border-color: #7c3aed;
+      color: #fff;
+    }
+
+    .langue-btn.selected {
+      border-color: #a855f7;
+      background: #1a0a2e;
+      color: #fff;
+    }
+
+    button.main {
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    button.main:hover { opacity: 0.9; }
+    button.main:active { transform: scale(0.98); }
+    button.main:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* BIENVENUE */
+    .welcome {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+
+    .welcome.active { display: flex; }
+
+    .welcome h1 {
+      font-size: 2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .welcome p {
+      color: #888;
+      font-size: 0.95rem;
+    }
+
+    .step { display: none; flex-direction: column; gap: 20px; }
+    .step.active { display: flex; }
+  </style>
+</head>
+<body>
+
+  <div class="logo">LamaaGames</div>
+  <p class="tagline" id="tagline">Bienvenue !</p>
+
+  <div class="card">
+
+    <!-- LANGUE -->
+    <div class="step active" id="step-langue">
+      <h2>Quelle est ta langue ?</h2>
+      <div class="langues">
+        <div class="langue-btn" data-lang="fr">Français</div>
+        <div class="langue-btn" data-lang="en">English</div>
+        <div class="langue-btn" data-lang="es">Español</div>
+        <div class="langue-btn" data-lang="de">Deutsch</div>
+      </div>
+      <button class="main" id="btn-langue" disabled>Choisir</button>
+    </div>
+
+    <!-- BIENVENUE -->
+    <div class="step" id="step-bienvenue">
+      <h2 id="welcome-title">Bienvenue !</h2>
+      <p id="welcome-sub" style="text-align:center; color:#888;">Le hub arrive bientôt...</p>
+    </div>
+
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const pseudo = params.get('pseudo') || 'Joueur';
+
+    document.getElementById('tagline').textContent = pseudo;
+
+    let selectedLang = null;
+
+    const traductions = {
+      fr: { bienvenue: `Bienvenue, ${pseudo} !`, sub: 'Tu es bien arrivé sur LamaaGames.' },
+      en: { bienvenue: `Welcome, ${pseudo}!`, sub: 'You made it to LamaaGames.' },
+      es: { bienvenue: `¡Bienvenido, ${pseudo}!`, sub: 'Ya estás en LamaaGames.' },
+      de: { bienvenue: `Willkommen, ${pseudo}!`, sub: 'Du bist bei LamaaGames angekommen.' },
+    };
+
+    document.querySelectorAll('.langue-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.langue-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedLang = btn.dataset.lang;
+        document.getElementById('btn-langue').disabled = false;
+      });
+    });
+
+    document.getElementById('btn-langue').addEventListener('click', () => {
+      const t = traductions[selectedLang];
+      document.getElementById('welcome-title').textContent = t.bienvenue;
+      document.getElementById('welcome-sub').textContent = t.sub;
+      document.getElementById('step-langue').classList.remove('active');
+      document.getElementById('step-bienvenue').classList.add('active');
+    });
+  </script>
+
+</body>
+</html>
