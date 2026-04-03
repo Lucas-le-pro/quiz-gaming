@@ -130,9 +130,20 @@ app.post('/jeux/upload', async (req, res) => {
   if (error) return res.status(500).json({ error: error.message });
 
   const { data } = supabase.storage.from('jeux storage').getPublicUrl(chemin);
-  jeu.url = data.publicUrl;
+  jeu.supabaseUrl = data.publicUrl;
+  jeu.url = `https://lamaa-games.onrender.com/jeux/jouer/${id}`;
   io.emit('jeu-mis-en-ligne', jeu);
   res.json({ ok: true });
+});
+
+// Servir le jeu avec le bon Content-Type
+app.get('/jeux/jouer/:id', async (req, res) => {
+  const jeu = jeuxEnAttente.find(j => j.id === req.params.id);
+  if (!jeu || !jeu.supabaseUrl) return res.status(404).send('Jeu introuvable');
+  const response = await fetch(jeu.supabaseUrl);
+  const html = await response.text();
+  res.setHeader('Content-Type', 'text/html');
+  res.send(html);
 });
 
 // Récupérer les stats d'un joueur
