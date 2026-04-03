@@ -240,7 +240,7 @@
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({
             _subject: 'Bienvenue sur LamaaGames !',
-            message: `Bonjour ${pseudo} !\n\nTon compte LamaaGames est créé.\n\nPseudo : ${pseudo}\nEmail : ${userEmail}\n\n— LamaaGames`
+            message: `Bonjour ${pseudo} !\n\nTon compte LamaaGames est créé.\n\nClique ici pour accéder au hub :\nhttps://lucas-le-pro.github.io/quiz-gaming/hub.html?pseudo=${encodeURIComponent(pseudo)}\n\n— LamaaGames`
           })
         });
 
