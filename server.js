@@ -19,6 +19,7 @@ const amis = {};
 const invitations = {};
 const messages = {};
 const jeuxEnAttente = []; // [{ nom, description, proposePar, date }]
+const stats = {};         // stats[pseudo][jeu] = { tempsJoue, ...statsJeu }
 
 function cleAmis(a, b) {
   return [a, b].sort().join('_');
@@ -94,6 +95,27 @@ app.post('/jeux', (req, res) => {
   const jeu = { nom, description: description || '', proposePar, date: Date.now() };
   jeuxEnAttente.unshift(jeu);
   io.emit('nouveau-jeu', jeu);
+  res.json({ ok: true });
+});
+
+// Récupérer les stats d'un joueur
+app.get('/stats/:pseudo', (req, res) => {
+  const s = stats[req.params.pseudo] || {};
+  // Trier par temps joué décroissant
+  const trie = Object.entries(s)
+    .sort((a, b) => (b[1].tempsJoue || 0) - (a[1].tempsJoue || 0))
+    .map(([jeu, data]) => ({ jeu, ...data }));
+  res.json(trie);
+});
+
+// Enregistrer des stats (appelé par un jeu)
+app.post('/stats', (req, res) => {
+  const { pseudo, jeu, tempsJoue, ...autresStats } = req.body;
+  if (!pseudo || !jeu) return res.status(400).json({ error: 'Manque pseudo ou jeu' });
+  if (!stats[pseudo]) stats[pseudo] = {};
+  if (!stats[pseudo][jeu]) stats[pseudo][jeu] = { tempsJoue: 0 };
+  stats[pseudo][jeu].tempsJoue = (stats[pseudo][jeu].tempsJoue || 0) + (tempsJoue || 0);
+  Object.assign(stats[pseudo][jeu], autresStats);
   res.json({ ok: true });
 });
 
