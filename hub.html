@@ -4,6 +4,33 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LamaaGames</title>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getDatabase, ref, set, get, onValue, push, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+    // REMPLACE CES VALEURS PAR TON PROJET FIREBASE
+    const firebaseConfig = {
+      apiKey: "FIREBASE_API_KEY",
+      authDomain: "FIREBASE_AUTH_DOMAIN",
+      databaseURL: "FIREBASE_DATABASE_URL",
+      projectId: "FIREBASE_PROJECT_ID",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    window._db = db;
+    window._dbRef = ref;
+    window._dbSet = set;
+    window._dbGet = get;
+    window._dbOnValue = onValue;
+    window._dbPush = push;
+    window._dbServerTimestamp = serverTimestamp;
+    window._firebaseReady = true;
+    document.dispatchEvent(new Event('firebase-ready'));
+  </script>
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -71,16 +98,8 @@
       text-align: center;
     }
 
-    .langue-btn:hover {
-      border-color: #7c3aed;
-      color: #fff;
-    }
-
-    .langue-btn.selected {
-      border-color: #a855f7;
-      background: #1a0a2e;
-      color: #fff;
-    }
+    .langue-btn:hover { border-color: #7c3aed; color: #fff; }
+    .langue-btn.selected { border-color: #a855f7; background: #1a0a2e; color: #fff; }
 
     button.main {
       background: linear-gradient(135deg, #a855f7, #6366f1);
@@ -99,74 +118,211 @@
     button.main:active { transform: scale(0.98); }
     button.main:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* BIENVENUE */
-    .welcome {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      text-align: center;
+    input {
+      background: #0a0a0f;
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      padding: 14px 18px;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.2s;
+      width: 100%;
     }
 
-    .welcome.active { display: flex; }
+    input:focus { border-color: #7c3aed; }
+    input::placeholder { color: #444; }
 
-    .welcome h1 {
-      font-size: 2rem;
-      font-weight: 900;
-      background: linear-gradient(135deg, #a855f7, #6366f1);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .welcome p {
-      color: #888;
-      font-size: 0.95rem;
-    }
+    .message { text-align: center; font-size: 0.9rem; min-height: 20px; color: #888; }
+    .message.success { color: #4ade80; }
+    .message.error { color: #f87171; }
 
     .step { display: none; flex-direction: column; gap: 20px; }
     .step.active { display: flex; }
+
+    /* NOTIFICATION D'INVITATION */
+    #notif-invite {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      padding: 14px 20px;
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 600;
+      z-index: 999;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    #notif-invite.active { display: flex; }
+
+    .notif-btn {
+      padding: 6px 16px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .notif-btn.accept { background: #fff; color: #7c3aed; }
+    .notif-btn.refuse { background: transparent; border: 1px solid rgba(255,255,255,0.4); color: #fff; }
+
+    /* HUB */
+    #hub {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 700px;
+      gap: 20px;
+    }
+
+    #hub.active { display: flex; }
+
+    .hub-profil {
+      background: #13131a;
+      border: 1px solid #2a2a3a;
+      border-radius: 16px;
+      padding: 20px 30px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .hub-pseudo {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .hub-tag {
+      color: #666;
+      font-size: 0.85rem;
+    }
+
+    .hub-invite-section {
+      background: #13131a;
+      border: 1px solid #2a2a3a;
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .hub-invite-section h3 { color: #ccc; font-size: 1rem; }
+
+    .invite-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .invite-row input { flex: 1; }
+    .invite-row button { padding: 14px 20px; white-space: nowrap; }
+
+    .amis-liste {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ami-item {
+      background: #0a0a0f;
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.95rem;
+    }
+
+    .ami-item span { color: #888; font-size: 0.8rem; }
   </style>
 </head>
 <body>
 
-  <div class="logo">LamaaGames</div>
-  <p class="tagline" id="tagline">Bienvenue !</p>
+  <!-- NOTIFICATION D'INVITATION EN HAUT -->
+  <div id="notif-invite">
+    <span id="notif-texte"></span>
+    <button class="notif-btn accept" id="notif-accepter">Accepter</button>
+    <button class="notif-btn refuse" id="notif-refuser">Refuser</button>
+  </div>
 
-  <div class="card">
+  <!-- ÉTAPES D'ONBOARDING -->
+  <div id="onboarding">
+    <div class="logo">LamaaGames</div>
+    <p class="tagline" id="tagline">Bienvenue !</p>
 
-    <!-- LANGUE -->
-    <div class="step active" id="step-langue">
-      <h2>Quelle est ta langue ?</h2>
-      <div class="langues">
-        <div class="langue-btn" data-lang="fr">Français</div>
-        <div class="langue-btn" data-lang="en">English</div>
-        <div class="langue-btn" data-lang="es">Español</div>
-        <div class="langue-btn" data-lang="de">Deutsch</div>
+    <div class="card">
+
+      <!-- LANGUE -->
+      <div class="step active" id="step-langue">
+        <h2>Quelle est ta langue ?</h2>
+        <div class="langues">
+          <div class="langue-btn" data-lang="fr">Français</div>
+          <div class="langue-btn" data-lang="en">English</div>
+          <div class="langue-btn" data-lang="es">Español</div>
+          <div class="langue-btn" data-lang="de">Deutsch</div>
+        </div>
+        <button class="main" id="btn-langue" disabled>Choisir</button>
       </div>
-      <button class="main" id="btn-langue" disabled>Choisir</button>
+
+      <!-- BIENVENUE -->
+      <div class="step" id="step-bienvenue">
+        <h2 id="welcome-title">Bienvenue !</h2>
+        <p id="welcome-sub" style="text-align:center; color:#888;"></p>
+        <button class="main" id="btn-entrer">Entrer dans LamaaGames</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- HUB PRINCIPAL -->
+  <div id="hub">
+    <div class="logo">LamaaGames</div>
+
+    <div class="hub-profil">
+      <div>
+        <div class="hub-pseudo" id="hub-pseudo"></div>
+        <div class="hub-tag">LamaaGames</div>
+      </div>
     </div>
 
-    <!-- BIENVENUE -->
-    <div class="step" id="step-bienvenue">
-      <h2 id="welcome-title">Bienvenue !</h2>
-      <p id="welcome-sub" style="text-align:center; color:#888;">Le hub arrive bientôt...</p>
-    </div>
+    <div class="hub-invite-section">
+      <h3>Inviter un ami</h3>
+      <div class="invite-row">
+        <input type="text" id="input-ami" placeholder="Pseudo de ton ami" maxlength="20">
+        <button class="main" id="btn-inviter">Inviter</button>
+      </div>
+      <p class="message" id="msg-inviter"></p>
 
+      <h3 style="margin-top:8px;">Mes amis</h3>
+      <div class="amis-liste" id="amis-liste">
+        <p style="color:#555; font-size:0.85rem;">Aucun ami pour l'instant.</p>
+      </div>
+    </div>
   </div>
 
   <script>
     const params = new URLSearchParams(window.location.search);
     const pseudo = params.get('pseudo') || 'Joueur';
+    const invitePseudo = params.get('invite_from') || null;
 
     document.getElementById('tagline').textContent = pseudo;
 
+    // ---- LANGUE ----
     let selectedLang = null;
-
     const traductions = {
-      fr: { bienvenue: `Bienvenue, ${pseudo} !`, sub: 'Tu es bien arrivé sur LamaaGames.' },
-      en: { bienvenue: `Welcome, ${pseudo}!`, sub: 'You made it to LamaaGames.' },
-      es: { bienvenue: `¡Bienvenido, ${pseudo}!`, sub: 'Ya estás en LamaaGames.' },
-      de: { bienvenue: `Willkommen, ${pseudo}!`, sub: 'Du bist bei LamaaGames angekommen.' },
+      fr: { bienvenue: `Bienvenue, ${pseudo} !`, sub: 'Tu es bien arrivé sur LamaaGames.', btn: 'Entrer dans LamaaGames' },
+      en: { bienvenue: `Welcome, ${pseudo}!`, sub: 'You made it to LamaaGames.', btn: 'Enter LamaaGames' },
+      es: { bienvenue: `¡Bienvenido, ${pseudo}!`, sub: 'Ya estás en LamaaGames.', btn: 'Entrar en LamaaGames' },
+      de: { bienvenue: `Willkommen, ${pseudo}!`, sub: 'Du bist bei LamaaGames angekommen.', btn: 'LamaaGames betreten' },
     };
 
     document.querySelectorAll('.langue-btn').forEach(btn => {
@@ -182,8 +338,112 @@
       const t = traductions[selectedLang];
       document.getElementById('welcome-title').textContent = t.bienvenue;
       document.getElementById('welcome-sub').textContent = t.sub;
+      document.getElementById('btn-entrer').textContent = t.btn;
       document.getElementById('step-langue').classList.remove('active');
       document.getElementById('step-bienvenue').classList.add('active');
+    });
+
+    document.getElementById('btn-entrer').addEventListener('click', () => {
+      document.getElementById('onboarding').style.display = 'none';
+      document.getElementById('hub').classList.add('active');
+      document.getElementById('hub-pseudo').textContent = pseudo;
+      initHub();
+    });
+
+    // ---- HUB & FIREBASE ----
+    function initHub() {
+      document.addEventListener('firebase-ready', () => {
+        chargerAmis();
+        verifierInvitation();
+      });
+      if (window._firebaseReady) {
+        chargerAmis();
+        verifierInvitation();
+      }
+    }
+
+    function verifierInvitation() {
+      if (!invitePseudo) return;
+      document.getElementById('notif-texte').textContent = `${invitePseudo} vous invite à devenir ami`;
+      document.getElementById('notif-invite').classList.add('active');
+
+      document.getElementById('notif-accepter').addEventListener('click', async () => {
+        const db = window._db;
+        const ref = window._dbRef;
+        const set = window._dbSet;
+
+        // Ajouter l'amitié des deux côtés
+        await set(ref(db, `amis/${pseudo}/${invitePseudo}`), { depuis: Date.now() });
+        await set(ref(db, `amis/${invitePseudo}/${pseudo}`), { depuis: Date.now() });
+
+        document.getElementById('notif-invite').classList.remove('active');
+        chargerAmis();
+      });
+
+      document.getElementById('notif-refuser').addEventListener('click', () => {
+        document.getElementById('notif-invite').classList.remove('active');
+      });
+    }
+
+    async function chargerAmis() {
+      const db = window._db;
+      const ref = window._dbRef;
+      const get = window._dbGet;
+
+      try {
+        const snap = await get(ref(db, `amis/${pseudo}`));
+        const liste = document.getElementById('amis-liste');
+        if (snap.exists()) {
+          const amis = Object.keys(snap.val());
+          liste.innerHTML = amis.map(a => `
+            <div class="ami-item">
+              <strong>${a}</strong>
+              <span>Ami</span>
+            </div>
+          `).join('');
+        } else {
+          liste.innerHTML = '<p style="color:#555; font-size:0.85rem;">Aucun ami pour l\'instant.</p>';
+        }
+      } catch(e) {
+        console.log('Firebase pas encore configuré');
+      }
+    }
+
+    // ---- INVITER UN AMI ----
+    document.getElementById('btn-inviter').addEventListener('click', async () => {
+      const ami = document.getElementById('input-ami').value.trim();
+      const msg = document.getElementById('msg-inviter');
+
+      if (!ami || ami.length < 2) {
+        msg.textContent = 'Entre un pseudo valide.';
+        msg.className = 'message error';
+        return;
+      }
+
+      if (ami.toLowerCase() === pseudo.toLowerCase()) {
+        msg.textContent = 'Tu ne peux pas t\'inviter toi-même.';
+        msg.className = 'message error';
+        return;
+      }
+
+      // Générer le lien d'invitation
+      const lien = `${window.location.origin}${window.location.pathname}?pseudo=${encodeURIComponent(ami)}&invite_from=${encodeURIComponent(pseudo)}`;
+
+      // Copier dans le presse-papier
+      try {
+        await navigator.clipboard.writeText(lien);
+        msg.textContent = `Lien copié ! Envoie-le à ${ami}.`;
+        msg.className = 'message success';
+      } catch(e) {
+        msg.textContent = `Lien : ${lien}`;
+        msg.className = 'message';
+      }
+
+      document.getElementById('input-ami').value = '';
+    });
+
+    document.getElementById('input-ami').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('btn-inviter').click();
     });
   </script>
 
