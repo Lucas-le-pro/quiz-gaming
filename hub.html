@@ -289,6 +289,21 @@
     }
     .profil-fermer:hover { border-color: #7c3aed; color: #fff; }
 
+    .profil-stats { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+
+    .stat-jeu {
+      background: #0a0a0f;
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      padding: 12px 14px;
+      text-align: left;
+    }
+
+    .stat-jeu-nom { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+    .stat-jeu-temps { color: #a855f7; font-size: 0.8rem; margin-bottom: 6px; }
+    .stat-jeu-details { color: #888; font-size: 0.8rem; line-height: 1.6; }
+    .profil-aucun-stat { color: #555; font-size: 0.85rem; text-align: center; }
+
     /* CHAT */
     #chat-panel {
       position: fixed;
@@ -415,6 +430,7 @@
       <div class="profil-avatar" id="profil-avatar"></div>
       <div class="profil-pseudo" id="profil-pseudo"></div>
       <div class="profil-tag">LamaaGames</div>
+      <div class="profil-stats" id="profil-stats"></div>
       <button class="main" id="profil-chat" style="width:100%;">Ouvrir le chat</button>
       <div class="profil-fermer" id="profil-fermer">Fermer</div>
     </div>
@@ -614,10 +630,39 @@
     }
 
     // ---- PROFIL AMI ----
-    function ouvrirProfil(ami) {
+    async function ouvrirProfil(ami) {
       document.getElementById('profil-pseudo').textContent = ami;
       document.getElementById('profil-avatar').textContent = ami[0].toUpperCase();
+      document.getElementById('profil-stats').innerHTML = '<p class="profil-aucun-stat">Chargement...</p>';
       document.getElementById('profil-overlay').classList.add('active');
+
+      // Charger les stats
+      try {
+        const res = await fetch(`${SERVER}/stats/${ami}`);
+        const statsJoueur = await res.json();
+        const statsDiv = document.getElementById('profil-stats');
+
+        if (statsJoueur.length === 0) {
+          statsDiv.innerHTML = '<p class="profil-aucun-stat">Aucun jeu joué pour l\'instant.</p>';
+        } else {
+          statsDiv.innerHTML = statsJoueur.map(s => {
+            const minutes = Math.floor((s.tempsJoue || 0) / 60);
+            const details = Object.entries(s)
+              .filter(([k]) => !['jeu', 'tempsJoue'].includes(k))
+              .map(([k, v]) => `${k} : ${v}`)
+              .join(' · ');
+            return `
+              <div class="stat-jeu">
+                <div class="stat-jeu-nom">${s.jeu}</div>
+                <div class="stat-jeu-temps">${minutes} min jouées</div>
+                ${details ? `<div class="stat-jeu-details">${details}</div>` : ''}
+              </div>
+            `;
+          }).join('');
+        }
+      } catch(e) {
+        document.getElementById('profil-stats').innerHTML = '<p class="profil-aucun-stat">Impossible de charger les stats.</p>';
+      }
 
       document.getElementById('profil-chat').onclick = () => {
         document.getElementById('profil-overlay').classList.remove('active');
