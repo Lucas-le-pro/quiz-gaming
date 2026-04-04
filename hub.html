@@ -216,6 +216,76 @@
     }
     .btn-trois-points:hover { background: #2a2a3a; color: #fff; }
 
+    /* MODAL INVITE JEU */
+    #invite-jeu-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 900;
+      align-items: center;
+      justify-content: center;
+    }
+    #invite-jeu-overlay.active { display: flex; }
+    .invite-jeu-card {
+      background: #13131a;
+      border: 1px solid #2a2a3a;
+      border-radius: 16px;
+      padding: 28px;
+      width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .invite-jeu-card h3 { color: #ccc; font-size: 1rem; }
+    .invite-jeu-ami {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0a0a0f;
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+    .invite-jeu-ami-info { display: flex; align-items: center; gap: 10px; }
+    .statut-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .statut-dot.offline  { background: #ef4444; }
+    .statut-dot.online   { background: #22c55e; }
+    .statut-dot.in-game  { background: #f97316; }
+    .btn-inviter-jeu {
+      padding: 6px 14px; border-radius: 8px; border: none;
+      font-weight: 700; font-size: 0.82rem; cursor: pointer; letter-spacing: 1px;
+    }
+    .btn-inviter-jeu.online  { background: #22c55e; color: #000; }
+    .btn-inviter-jeu.in-game { background: #f97316; color: #000; }
+    .invite-jeu-fermer { color: #666; font-size: 0.85rem; cursor: pointer; text-align: center; }
+    .invite-jeu-fermer:hover { color: #fff; }
+
+    /* NOTIF INVITATION JEU */
+    #notif-jeu {
+      display: none;
+      position: fixed;
+      top: 60px; left: 50%; transform: translateX(-50%);
+      background: #13131a;
+      border: 1px solid #a855f7;
+      border-radius: 12px;
+      padding: 16px 22px;
+      z-index: 1000;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      text-align: center;
+      min-width: 280px;
+      box-shadow: 0 0 30px rgba(168,85,247,0.3);
+    }
+    #notif-jeu.active { display: flex; }
+    #notif-jeu p { font-size: 0.9rem; color: #ccc; }
+    #notif-jeu strong { color: #a855f7; }
+
     /* MODAL URL */
     #url-overlay {
       display: none;
@@ -473,6 +543,24 @@
 
   </div>
 
+  <!-- NOTIF INVITATION JEU -->
+  <div id="notif-jeu">
+    <p id="notif-jeu-texte"><strong id="notif-jeu-de"></strong> t'invite à jouer à <strong id="notif-jeu-nom"></strong></p>
+    <div style="display:flex;gap:10px;">
+      <button class="main" id="notif-jeu-accepter" style="padding:8px 18px;font-size:0.85rem;">Rejoindre</button>
+      <button id="notif-jeu-refuser" style="padding:8px 18px;border-radius:8px;border:1px solid #444;background:none;color:#888;cursor:pointer;font-size:0.85rem;">Ignorer</button>
+    </div>
+  </div>
+
+  <!-- MODAL INVITE JEU -->
+  <div id="invite-jeu-overlay">
+    <div class="invite-jeu-card">
+      <h3>Inviter un ami à jouer à <span id="invite-jeu-titre"></span></h3>
+      <div id="invite-jeu-liste"></div>
+      <div class="invite-jeu-fermer" id="invite-jeu-fermer">Fermer</div>
+    </div>
+  </div>
+
   <!-- MODAL UPLOAD -->
   <div id="url-overlay">
     <div class="url-card">
@@ -521,7 +609,10 @@
     const socket = io(SERVER);
     let amiActif = null;
 
-    socket.on('connect', () => socket.emit('rejoindre', pseudo));
+    socket.on('connect', () => {
+      socket.emit('rejoindre', pseudo);
+      socket.emit('set-status', { pseudo, status: 'online' });
+    });
 
     // Invitation en temps réel
     socket.on('invitation', ({ de }) => afficherNotif(de));
@@ -532,6 +623,95 @@
     // Nouveau message
     socket.on('nouveau-message', ({ avec, msg }) => {
       if (avec === amiActif) afficherMessage(msg);
+    });
+
+    // ---- STATUTS ----
+    const friendsStatus = {};
+
+    socket.on('status-update', ({ pseudo: p, status, jeu }) => {
+      friendsStatus[p] = { status, jeu };
+      // Mettre à jour le point de statut si visible dans la liste
+      const dot = document.querySelector(`.statut-dot[data-pseudo="${p}"]`);
+      if (dot) {
+        dot.className = `statut-dot ${status}`;
+        dot.title = status === 'in-game' ? `En jeu : ${jeu}` : status === 'online' ? 'En ligne' : 'Hors ligne';
+      }
+    });
+
+    socket.on('friends-status', (statuses) => {
+      Object.entries(statuses).forEach(([p, s]) => { friendsStatus[p] = s; });
+    });
+
+    // ---- INVITATION JEU REÇUE ----
+    socket.on('invitation-jeu', ({ de, jeu, url }) => {
+      document.getElementById('notif-jeu-de').textContent = de;
+      document.getElementById('notif-jeu-nom').textContent = jeu;
+      document.getElementById('notif-jeu').classList.add('active');
+
+      document.getElementById('notif-jeu-accepter').onclick = () => {
+        document.getElementById('notif-jeu').classList.remove('active');
+        window.open(url, '_blank');
+      };
+      document.getElementById('notif-jeu-refuser').onclick = () => {
+        document.getElementById('notif-jeu').classList.remove('active');
+      };
+      setTimeout(() => document.getElementById('notif-jeu').classList.remove('active'), 20000);
+    });
+
+    // ---- MODAL INVITE JEU ----
+    let inviteJeuNom = '', inviteJeuUrl = '';
+
+    function ouvrirInviteJeu(nom, url) {
+      inviteJeuNom = nom;
+      inviteJeuUrl = url;
+      document.getElementById('invite-jeu-titre').textContent = nom;
+      const liste = document.getElementById('invite-jeu-liste');
+
+      // Demander les statuts des amis
+      fetch(`${SERVER}/amis/${pseudo}`)
+        .then(r => r.json())
+        .then(amis => {
+          socket.emit('get-friends-status', { amis });
+          setTimeout(() => {
+            if (amis.length === 0) {
+              liste.innerHTML = '<p style="color:#555;font-size:0.85rem;">Aucun ami pour l\'instant.</p>';
+            } else {
+              liste.innerHTML = amis.map(a => {
+                const s = friendsStatus[a] || { status: 'offline', jeu: null };
+                const btnHtml = s.status !== 'offline'
+                  ? `<button class="btn-inviter-jeu ${s.status}" data-ami="${a}">${s.status === 'in-game' ? 'En jeu' : 'Inviter'}</button>`
+                  : '';
+                return `
+                  <div class="invite-jeu-ami">
+                    <div class="invite-jeu-ami-info">
+                      <div class="statut-dot ${s.status}" data-pseudo="${a}" title="${s.status === 'in-game' ? 'En jeu : ' + s.jeu : s.status === 'online' ? 'En ligne' : 'Hors ligne'}"></div>
+                      <span>${a}</span>
+                    </div>
+                    ${btnHtml}
+                  </div>
+                `;
+              }).join('');
+
+              liste.querySelectorAll('.btn-inviter-jeu').forEach(btn => {
+                btn.addEventListener('click', () => {
+                  socket.emit('invite-jeu', { de: pseudo, a: btn.dataset.ami, jeu: inviteJeuNom, url: inviteJeuUrl });
+                  btn.textContent = '✓ Envoyé';
+                  btn.disabled = true;
+                });
+              });
+            }
+          }, 300);
+        });
+
+      document.getElementById('invite-jeu-overlay').classList.add('active');
+    }
+
+    document.getElementById('invite-jeu-fermer').addEventListener('click', () => {
+      document.getElementById('invite-jeu-overlay').classList.remove('active');
+    });
+    document.getElementById('invite-jeu-overlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('invite-jeu-overlay'))
+        document.getElementById('invite-jeu-overlay').classList.remove('active');
     });
 
     // ---- LANGUE ----
@@ -608,12 +788,19 @@
       if (amis.length === 0) {
         liste.innerHTML = '<p style="color:#555; font-size:0.85rem;">Aucun ami pour l\'instant.</p>';
       } else {
-        liste.innerHTML = amis.map(a => `
-          <div class="ami-item" data-ami="${a}">
-            <strong>${a}</strong>
-            <span>Voir le profil</span>
-          </div>
-        `).join('');
+        socket.emit('get-friends-status', { amis });
+        liste.innerHTML = amis.map(a => {
+          const s = friendsStatus[a] || { status: 'offline' };
+          return `
+            <div class="ami-item" data-ami="${a}">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div class="statut-dot ${s.status}" data-pseudo="${a}"></div>
+                <strong>${a}</strong>
+              </div>
+              <span>Voir le profil</span>
+            </div>
+          `;
+        }).join('');
         liste.querySelectorAll('.ami-item').forEach(el => {
           el.addEventListener('click', () => ouvrirProfil(el.dataset.ami, true));
         });
@@ -663,8 +850,9 @@
         const estEnLigne = !!j.url;
         return `
           <div class="jeu-attente-card ${estEnLigne ? 'en-ligne' : ''}" id="jeu-${j.id}"
-            data-url="${estEnLigne ? j.url : ''}" data-createur="${j.proposePar}" data-enligne="${estEnLigne}">
+            data-url="${estEnLigne ? j.url : ''}" data-createur="${j.proposePar}" data-enligne="${estEnLigne}" data-nom="${j.nom}">
             ${estCreateur && !estEnLigne ? `<button class="btn-trois-points" data-id="${j.id}" data-nom="${j.nom}">···</button>` : ''}
+            ${estEnLigne ? `<button class="btn-trois-points" style="color:#a855f7;" data-invite-nom="${j.nom}" data-invite-url="${j.url}">👥</button>` : ''}
             <div class="jeu-attente-nom">${j.nom}</div>
             ${j.description ? `<div class="jeu-attente-desc">${j.description}</div>` : ''}
             <div class="jeu-attente-par">Proposé par ${j.proposePar}</div>
@@ -680,10 +868,17 @@
         });
       });
 
-      liste.querySelectorAll('.btn-trois-points').forEach(btn => {
+      liste.querySelectorAll('.btn-trois-points[data-id]').forEach(btn => {
         btn.addEventListener('click', e => {
           e.stopPropagation();
           ouvrirUrlModal(btn.dataset.id, btn.dataset.nom);
+        });
+      });
+
+      liste.querySelectorAll('.btn-trois-points[data-invite-nom]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          ouvrirInviteJeu(btn.dataset.inviteNom, btn.dataset.inviteUrl);
         });
       });
     }
