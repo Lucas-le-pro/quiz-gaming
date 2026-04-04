@@ -185,6 +185,14 @@ function broadcastRooms() {
   io.emit('tetris_rooms', tetrisRoomsList());
 }
 
+// ── STATUTS JOUEURS ──────────────────────────────────────
+const userStatus = {}; // pseudo -> { status: 'online'|'in-game', jeu: string|null }
+
+function broadcastStatus(pseudo, status, jeu = null) {
+  userStatus[pseudo] = { status, jeu };
+  io.emit('status-update', { pseudo, status, jeu });
+}
+
 // Socket.io — connexion
 io.on('connection', (socket) => {
   let monPseudo = null;
@@ -193,6 +201,25 @@ io.on('connection', (socket) => {
   socket.on('rejoindre', (pseudo) => {
     monPseudo = pseudo;
     socket.join(pseudo);
+    broadcastStatus(pseudo, 'online');
+  });
+
+  // Statut manuel (ex: entrer dans un jeu)
+  socket.on('set-status', ({ pseudo, status, jeu }) => {
+    monPseudo = monPseudo || pseudo;
+    broadcastStatus(pseudo, status, jeu || null);
+  });
+
+  // Récupérer le statut d'une liste d'amis
+  socket.on('get-friends-status', ({ amis }) => {
+    const result = {};
+    amis.forEach(a => { result[a] = userStatus[a] || { status: 'offline', jeu: null }; });
+    socket.emit('friends-status', result);
+  });
+
+  // Inviter un ami à jouer
+  socket.on('invite-jeu', ({ de, a, jeu, url }) => {
+    io.to(a).emit('invitation-jeu', { de, jeu, url });
   });
 
   socket.on('message', ({ de, a, texte }) => {
@@ -275,6 +302,10 @@ io.on('connection', (socket) => {
       room.players.forEach(p => { if (p !== socket) p.emit('tetris_abandon'); });
       delete tetrisRooms[tetrisRoomId];
       broadcastRooms();
+    }
+    if (monPseudo) {
+      delete userStatus[monPseudo];
+      io.emit('status-update', { pseudo: monPseudo, status: 'offline', jeu: null });
     }
   });
 });
