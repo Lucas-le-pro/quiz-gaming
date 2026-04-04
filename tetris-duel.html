@@ -1,0 +1,875 @@
+<!-- Jeu : Tetris Duel Online | Créé le : 2026-04-04 | Tetris 1v1 en réseau via Socket.io -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tetris Duel Online</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: #080812;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Courier New', monospace;
+    color: #eee;
+    overflow: hidden;
+}
+
+/* ══ BLOCS FOND ══ */
+.bg-blocks { position: fixed; inset: 0; pointer-events: none; z-index: -1; overflow: hidden; }
+.bg-block {
+    position: absolute; width: 22px; height: 22px; border-radius: 2px;
+    opacity: 0.06; animation: fall linear infinite;
+}
+@keyframes fall {
+    from { transform: translateY(-30px) rotate(0deg); }
+    to   { transform: translateY(110vh) rotate(360deg); }
+}
+
+/* ══ ÉCRANS ══ */
+.screen { display: none; flex-direction: column; align-items: center; gap: 18px; }
+.screen.active { display: flex; }
+
+h1 {
+    font-size: 2.4rem; letter-spacing: 6px; color: #ff4757;
+    text-shadow: 0 0 40px rgba(255,71,87,0.8);
+    animation: glow 2.2s ease-in-out infinite;
+}
+@keyframes glow {
+    0%,100% { text-shadow: 0 0 20px rgba(255,71,87,0.5); }
+    50%      { text-shadow: 0 0 60px rgba(255,71,87,1), 0 0 100px rgba(255,71,87,0.4); }
+}
+.sub { font-size: 0.65rem; color: #444; letter-spacing: 4px; }
+
+input {
+    background: #0e0e1e; border: 1px solid #2a2a4a; border-radius: 4px;
+    color: #eee; font-family: 'Courier New', monospace; font-size: 1rem;
+    padding: 10px 16px; width: 320px; text-align: center; outline: none;
+}
+input:focus { border-color: #ff4757; }
+
+.btn {
+    width: 320px; padding: 14px 0; font-family: 'Courier New', monospace;
+    font-size: 0.9rem; font-weight: bold; letter-spacing: 2px; border: none;
+    border-radius: 4px; cursor: pointer; transition: transform .15s, filter .15s;
+}
+.btn:hover { transform: scale(1.04); filter: brightness(1.3); }
+.btn-red {
+    background: linear-gradient(135deg, #2a0a0a, #1a0505);
+    color: #ff4757; border: 2px solid #ff4757;
+    box-shadow: 0 0 20px rgba(255,71,87,0.2);
+}
+.btn-cyan {
+    background: linear-gradient(135deg, #0d2240, #0a1a30);
+    color: #00e5e5; border: 2px solid #00e5e5;
+    box-shadow: 0 0 20px rgba(0,229,229,0.15);
+}
+.btn-ghost {
+    background: rgba(255,255,255,.07); color: rgba(255,255,255,.5);
+    border: 1px solid rgba(255,255,255,.14); border-radius: 10px;
+    width: 320px; padding: 10px 0; font-family: 'Courier New', monospace;
+    font-size: .85rem; font-weight: bold; letter-spacing: 2px; cursor: pointer;
+    transition: background .2s, color .2s;
+}
+.btn-ghost:hover { background: rgba(255,255,255,.14); color: #fff; }
+
+.sep { font-size: .7rem; color: #333; letter-spacing: 3px; }
+.error { color: #ff4757; font-size: .8rem; min-height: 16px; }
+
+/* ══ LISTE DES SALLES ══ */
+#rooms-header {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 380px;
+}
+#rooms-header h2 { font-size: 1rem; letter-spacing: 3px; color: #eee; }
+.btn-create {
+    padding: 8px 18px; font-family: 'Courier New', monospace; font-size: .8rem;
+    font-weight: bold; letter-spacing: 1px; border-radius: 4px; cursor: pointer;
+    background: linear-gradient(135deg, #2a0a0a, #1a0505);
+    color: #ff4757; border: 2px solid #ff4757;
+    box-shadow: 0 0 12px rgba(255,71,87,0.2);
+    transition: filter .15s;
+}
+.btn-create:hover { filter: brightness(1.3); }
+
+#rooms-list {
+    width: 380px; max-height: 340px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 8px;
+}
+#rooms-list::-webkit-scrollbar { width: 4px; }
+#rooms-list::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 2px; }
+
+.room-item {
+    background: #0e0e1e; border: 1px solid #2a2a4a; border-radius: 6px;
+    padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+    transition: border-color .2s;
+}
+.room-item:hover { border-color: #ff4757; }
+.room-creator { font-size: .9rem; color: #eee; letter-spacing: 1px; }
+.room-creator span { color: #444; font-size: .7rem; letter-spacing: 2px; margin-right: 8px; }
+.btn-join {
+    padding: 6px 16px; font-family: 'Courier New', monospace; font-size: .78rem;
+    font-weight: bold; letter-spacing: 1px; border-radius: 4px; cursor: pointer;
+    background: #0d2240; color: #00e5e5; border: 1px solid #00e5e5;
+    transition: filter .15s;
+}
+.btn-join:hover { filter: brightness(1.4); }
+
+.rooms-empty { font-size: .8rem; color: #333; letter-spacing: 2px; padding: 30px 0; text-align: center; }
+
+/* ══ SALLE PRIVÉE ══ */
+.private-toggle {
+    display: flex; align-items: center; gap: 10px;
+    font-size: .75rem; color: #555; letter-spacing: 2px; cursor: pointer;
+}
+.private-toggle input[type=checkbox] { accent-color: #ff4757; width: 15px; height: 15px; cursor: pointer; }
+
+/* ══ ATTENTE ══ */
+.code-box {
+    background: #0e0e1e; border: 2px solid #ff4757; border-radius: 8px;
+    font-size: 2.8rem; font-weight: bold; letter-spacing: 12px;
+    padding: 16px 32px; color: #ff4757;
+    box-shadow: 0 0 30px rgba(255,71,87,0.3);
+}
+.wait-hint { font-size: .72rem; color: #444; letter-spacing: 3px; }
+
+/* ══ COMPTE À REBOURS ══ */
+#countdown-num {
+    font-size: 7rem; font-weight: bold; color: #ff4757;
+    text-shadow: 0 0 60px rgba(255,71,87,0.8);
+    animation: pulse .8s ease-in-out infinite;
+}
+@keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50%      { transform: scale(1.15); }
+}
+
+/* ══ JEU ══ */
+#game-screen { flex-direction: row; gap: 20px; align-items: flex-start; }
+
+.player-area { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.player-label { font-size: .75rem; letter-spacing: 3px; font-weight: bold; }
+.label-me  { color: #00e5e5; }
+.label-opp { color: #ff4757; }
+
+canvas { display: block; }
+
+.atk-flash {
+    font-size: 0.65rem; height: 1em; font-weight: bold;
+    color: #ff4757; opacity: 0; transition: opacity 0.08s; letter-spacing: 1px;
+}
+
+.stats {
+    font-size: .72rem; color: #666; text-align: center; line-height: 1.9;
+    margin-top: 4px;
+}
+.stats strong { color: #eee; }
+
+/* ══ BOUTONS TACTILES ══ */
+.onscreen-controls {
+    display: grid;
+    grid-template-columns: repeat(3, 46px);
+    grid-template-rows: repeat(2, 46px);
+    gap: 5px;
+    margin-top: 8px;
+}
+.ctrl-btn {
+    width: 46px; height: 46px; border-radius: 9px;
+    border: 1px solid #1e1e32; background: #0a0a18;
+    color: #505070; font-size: 1.1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    user-select: none; -webkit-user-select: none; touch-action: none;
+    transition: background .07s, color .07s, transform .07s, border-color .07s;
+}
+.ctrl-btn:active, .ctrl-btn.pressed {
+    background: #1a1a36; color: #ddddff;
+    transform: scale(0.88); border-color: #ff4757;
+}
+.ctrl-empty { visibility: hidden; pointer-events: none; }
+
+/* Séparateur vertical */
+.divider {
+    width: 3px; height: 500px;
+    background: linear-gradient(to bottom, transparent, #ff4757 25%, #ff4757 75%, transparent);
+    margin: 0 4px; align-self: center;
+}
+
+/* Barre du bas */
+.bottom-bar { display: flex; align-items: center; gap: 20px; margin-top: 10px; }
+#message { font-size: .82rem; color: #ffd32a; letter-spacing: 2px; min-height: 1.2em; text-align: center; min-width: 200px; }
+.nav-btn {
+    padding: 9px 20px; font-family: 'Courier New', monospace; font-size: .82rem;
+    font-weight: 700; color: rgba(255,255,255,.45); background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.14); border-radius: 10px; cursor: pointer;
+    letter-spacing: 1px; transition: background .2s, color .2s;
+}
+.nav-btn:hover { background: rgba(255,255,255,.14); color: #fff; }
+
+/* Garbage flash */
+@keyframes flash-red {
+    0%   { box-shadow: 0 0 0 4px #ff4757; }
+    100% { box-shadow: none; }
+}
+.garbage-flash { animation: flash-red .4s ease-out; }
+
+/* ══ RÉSULTAT ══ */
+#result-screen { gap: 28px; }
+.result-title { font-size: 3.5rem; letter-spacing: 8px; font-weight: bold; }
+.win  { color: #2ed573; text-shadow: 0 0 40px rgba(46,213,115,.8); }
+.lose { color: #ff4757; text-shadow: 0 0 40px rgba(255,71,87,.8); }
+.result-score { font-size: .9rem; color: #666; letter-spacing: 2px; }
+</style>
+</head>
+<body>
+
+<div class="bg-blocks" id="bgBlocks"></div>
+
+<!-- ══ ÉCRAN PSEUDO ══ -->
+<div id="pseudo-screen" class="screen active">
+    <h1>TETRIS DUEL</h1>
+    <div class="sub">1V1 EN LIGNE</div>
+    <input id="pseudo-input" type="text" placeholder="Ton pseudo" maxlength="16" autocomplete="off">
+    <button class="btn btn-red" onclick="validerPseudo()">⚡ JOUER</button>
+    <span class="error" id="pseudo-error"></span>
+</div>
+
+<!-- ══ LISTE DES SALLES ══ -->
+<div id="rooms-screen" class="screen">
+    <h1>TETRIS DUEL</h1>
+    <div id="rooms-header">
+        <h2>SALLES EN ATTENTE</h2>
+        <button class="btn-create" onclick="showCreateScreen()">+ CRÉER</button>
+    </div>
+    <div id="rooms-list">
+        <div class="rooms-empty" id="rooms-empty">Aucune salle disponible...</div>
+    </div>
+    <span class="sep">— salle privée ? —</span>
+    <input id="code-input" type="text" placeholder="Code de la salle (4 lettres)" maxlength="4"
+        autocomplete="off" style="text-transform:uppercase; width:320px">
+    <button class="btn-ghost" onclick="rejoindrePrivee()">🔒 REJOINDRE AVEC UN CODE</button>
+    <span class="error" id="rooms-error"></span>
+</div>
+
+<!-- ══ CRÉER UNE SALLE ══ -->
+<div id="create-screen" class="screen">
+    <h1>TETRIS DUEL</h1>
+    <div class="sub">NOUVELLE SALLE</div>
+    <label class="private-toggle">
+        <input type="checkbox" id="private-check"> SALLE PRIVÉE (avec code)
+    </label>
+    <button class="btn btn-red" onclick="creerSalle()">⚡ CRÉER LA SALLE</button>
+    <button class="btn-ghost" onclick="showScreen('rooms-screen')">← RETOUR</button>
+    <span class="error" id="create-error"></span>
+</div>
+
+<!-- ══ ATTENTE ══ -->
+<div id="wait-screen" class="screen">
+    <h1>TETRIS DUEL</h1>
+    <div id="wait-public-msg" class="wait-hint">EN ATTENTE D'UN ADVERSAIRE...</div>
+    <div id="wait-private-wrap" style="display:none; flex-direction:column; align-items:center; gap:12px;">
+        <div class="wait-hint">PARTAGE CE CODE À TON AMI</div>
+        <div class="code-box" id="room-code-display">????</div>
+    </div>
+    <div class="wait-hint" style="animation: blink 1.2s infinite; margin-top:8px;">● EN ATTENTE...</div>
+    <button class="btn-ghost" style="margin-top:10px;" onclick="annulerSalle()">✕ ANNULER</button>
+    <style>@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }</style>
+</div>
+
+<!-- ══ COMPTE À REBOURS ══ -->
+<div id="countdown-screen" class="screen">
+    <div class="sub" id="vs-label">? VS ?</div>
+    <div id="countdown-num">3</div>
+</div>
+
+<!-- ══ JEU ══ -->
+<div id="game-screen" class="screen">
+
+    <!-- Moi -->
+    <div class="player-area">
+        <div class="player-label label-me" id="my-label">MOI</div>
+        <canvas id="c-me" width="250" height="500"></canvas>
+        <div class="atk-flash" id="atk-me">⚡ ATTAQUE !</div>
+        <div class="stats">Score : <strong id="score-me">0</strong><br>
+            Niv : <strong id="level-me">1</strong> &nbsp;|&nbsp; Lignes : <strong id="lines-me">0</strong></div>
+        <!-- Boutons tactiles -->
+        <div class="onscreen-controls" id="ctrl-me">
+            <button class="ctrl-btn" id="me-left">◀</button>
+            <button class="ctrl-btn" id="me-rot">↻</button>
+            <button class="ctrl-btn" id="me-right">▶</button>
+            <div class="ctrl-empty"></div>
+            <button class="ctrl-btn" id="me-down">▼</button>
+            <div class="ctrl-empty"></div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Adversaire -->
+    <div class="player-area">
+        <div class="player-label label-opp" id="opp-label">ADVERSAIRE</div>
+        <canvas id="c-opp" width="250" height="500"></canvas>
+        <div class="atk-flash" id="atk-opp"></div>
+        <div class="stats">Score : <strong id="score-opp">0</strong><br>
+            Niv : <strong id="level-opp">1</strong> &nbsp;|&nbsp; Lignes : <strong id="lines-opp">0</strong></div>
+    </div>
+
+</div>
+
+<!-- Barre bas (hors game-screen pour éviter le row) -->
+<div id="bottom-bar-wrap" style="display:none; margin-top:10px;">
+    <div class="bottom-bar">
+        <button class="nav-btn" onclick="retourLobby()">← Menu</button>
+        <div id="message"></div>
+        <button class="nav-btn" onclick="rejouer()">↺ Rejouer</button>
+    </div>
+</div>
+
+<!-- ══ RÉSULTAT ══ -->
+<div id="result-screen" class="screen">
+    <div class="result-title" id="result-title">VICTOIRE</div>
+    <div class="result-score" id="result-details"></div>
+    <button class="btn btn-red" onclick="retourLobby()" style="margin-top:10px;">↺ REJOUER</button>
+</div>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+// ══════════════════════════════════════════════════
+// CONNEXION
+// ══════════════════════════════════════════════════
+const socket = io('https://lamaa-games.onrender.com', { transports: ['websocket', 'polling'] });
+
+let monPseudo = '', oppPseudo = '', roomCode = '';
+
+// ══════════════════════════════════════════════════
+// BLOCS DÉCORATIFS
+// ══════════════════════════════════════════════════
+(function() {
+    const colors = ['#00e5e5','#f0d000','#c000e0','#00cc00','#e00000','#2020e0','#e07800'];
+    const container = document.getElementById('bgBlocks');
+    for (let i = 0; i < 30; i++) {
+        const el = document.createElement('div');
+        el.className = 'bg-block';
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.background = colors[Math.floor(Math.random() * colors.length)];
+        el.style.animationDuration = (6 + Math.random() * 14) + 's';
+        el.style.animationDelay = (-Math.random() * 20) + 's';
+        el.style.width = (16 + Math.floor(Math.random() * 3) * 8) + 'px';
+        el.style.height = el.style.width;
+        container.appendChild(el);
+    }
+})();
+
+// ══════════════════════════════════════════════════
+// CONSTANTES TETRIS
+// ══════════════════════════════════════════════════
+const COLS = 10, ROWS = 20, CELL = 25;
+
+const TETROMINOES = [
+    { shape: [[1,1,1,1]],           color: '#00e5e5' },
+    { shape: [[1,1],[1,1]],         color: '#f0d000' },
+    { shape: [[0,1,0],[1,1,1]],     color: '#c000e0' },
+    { shape: [[0,1,1],[1,1,0]],     color: '#00cc00' },
+    { shape: [[1,1,0],[0,1,1]],     color: '#e00000' },
+    { shape: [[1,0,0],[1,1,1]],     color: '#2020e0' },
+    { shape: [[0,0,1],[1,1,1]],     color: '#e07800' },
+];
+
+function randPiece() {
+    const t = TETROMINOES[Math.floor(Math.random() * TETROMINOES.length)];
+    return { shape: t.shape.map(r => [...r]), color: t.color, x: Math.floor(COLS/2) - Math.floor(t.shape[0].length/2), y: 0 };
+}
+
+function rotateCW(shape) {
+    const R = shape.length, C = shape[0].length;
+    const out = Array.from({length: C}, () => Array(R).fill(0));
+    for (let r = 0; r < R; r++)
+        for (let c = 0; c < C; c++)
+            out[c][R - 1 - r] = shape[r][c];
+    return out;
+}
+
+// ══════════════════════════════════════════════════
+// CLASSE GAME
+// ══════════════════════════════════════════════════
+class Game {
+    constructor(canvasId) {
+        this.ctx = document.getElementById(canvasId).getContext('2d');
+        this.pieceCount = 0;
+        this.reset();
+    }
+
+    reset() {
+        this.board    = Array.from({length: ROWS}, () => Array(COLS).fill(null));
+        this.next     = randPiece();
+        this.score    = 0; this.lines = 0; this.level = 1;
+        this.gameOver = false; this.timer = 0; this.interval = 800;
+        this.pending  = 0; this.pieceCount = 0;
+        this._spawn();
+    }
+
+    _spawn() {
+        this.cur  = this.next;
+        this.next = randPiece();
+        this.timer = 0; this.pieceCount++;
+        if (!this._valid(this.cur.shape, this.cur.x, this.cur.y)) this.gameOver = true;
+    }
+
+    _valid(shape, ox, oy) {
+        for (let r = 0; r < shape.length; r++)
+            for (let c = 0; c < shape[r].length; c++) {
+                if (!shape[r][c]) continue;
+                const x = ox + c, y = oy + r;
+                if (x < 0 || x >= COLS || y >= ROWS) return false;
+                if (y >= 0 && this.board[y][x]) return false;
+            }
+        return true;
+    }
+
+    _lock() {
+        const {shape, x, y, color} = this.cur;
+        for (let r = 0; r < shape.length; r++)
+            for (let c = 0; c < shape[r].length; c++)
+                if (shape[r][c] && y + r >= 0 && y + r < ROWS)
+                    this.board[y + r][x + c] = color;
+        const cleared = this._clearLines();
+        // Envoyer garbage à l'adversaire
+        const garbage = [0, 0, 1, 2, 4][Math.min(cleared, 4)];
+        if (garbage > 0) {
+            socket.emit('tetris_garbage', { code: roomCode, lines: garbage });
+            showAtkFlash('me');
+        }
+        // Envoyer état board
+        socket.emit('tetris_board', { code: roomCode, board: this.board, cur: this.cur, score: this.score, level: this.level, lines: this.lines });
+        if (!this.gameOver) this._spawn();
+    }
+
+    _clearLines() {
+        const keep    = this.board.filter(row => row.some(c => c === null));
+        const cleared = ROWS - keep.length;
+        if (cleared > 0) {
+            this.board  = [...Array.from({length: cleared}, () => Array(COLS).fill(null)), ...keep];
+            const pts   = [0, 100, 300, 500, 800];
+            this.score += pts[Math.min(cleared, 4)] * this.level;
+            this.lines += cleared;
+            this.level  = Math.floor(this.lines / 10) + 1;
+            this.interval = Math.max(80, 800 - (this.level - 1) * 60);
+            updateMyUI();
+        }
+        return cleared;
+    }
+
+    addGarbage(n) {
+        if (this.gameOver) return;
+        for (let i = 0; i < n; i++) {
+            this.board.shift();
+            const hole = Math.floor(Math.random() * COLS);
+            const row  = Array(COLS).fill('#2e2e48');
+            row[hole]  = null;
+            this.board.push(row);
+        }
+        for (let t = 0; t < 8; t++) {
+            if (this._valid(this.cur.shape, this.cur.x, this.cur.y)) break;
+            this.cur.y--;
+        }
+        if (!this._valid(this.cur.shape, this.cur.x, this.cur.y)) this.gameOver = true;
+        // Flash rouge sur mon canvas
+        const c = document.getElementById('c-me');
+        c.classList.add('garbage-flash');
+        setTimeout(() => c.classList.remove('garbage-flash'), 400);
+    }
+
+    moveLeft()  { if (!this.gameOver && this._valid(this.cur.shape, this.cur.x-1, this.cur.y)) { this.cur.x--; this._sendPos(); } }
+    moveRight() { if (!this.gameOver && this._valid(this.cur.shape, this.cur.x+1, this.cur.y)) { this.cur.x++; this._sendPos(); } }
+    rotate() {
+        if (this.gameOver) return;
+        const r = rotateCW(this.cur.shape);
+        for (const kick of [0,-1,1,-2,2]) {
+            if (this._valid(r, this.cur.x+kick, this.cur.y)) {
+                this.cur.shape = r; this.cur.x += kick; this._sendPos(); return;
+            }
+        }
+    }
+    softDrop() {
+        if (this.gameOver) return;
+        if (this._valid(this.cur.shape, this.cur.x, this.cur.y+1)) { this.cur.y++; this.timer = 0; this._sendPos(); }
+        else this._lock();
+    }
+    hardDrop() {
+        if (this.gameOver) return;
+        while (this._valid(this.cur.shape, this.cur.x, this.cur.y+1)) this.cur.y++;
+        this._lock();
+    }
+
+    _sendPos() {
+        socket.emit('tetris_board', { code: roomCode, board: this.board, cur: this.cur, score: this.score, level: this.level, lines: this.lines });
+    }
+
+    update(dt) {
+        if (this.gameOver) return;
+        this.timer += dt;
+        if (this.timer >= this.interval) {
+            this.timer = 0;
+            if (this._valid(this.cur.shape, this.cur.x, this.cur.y+1)) this.cur.y++;
+            else this._lock();
+        }
+    }
+
+    _ghostY() {
+        let gy = this.cur.y;
+        while (this._valid(this.cur.shape, this.cur.x, gy+1)) gy++;
+        return gy;
+    }
+
+    _drawCell(cx, cy, color, alpha) {
+        const ctx = this.ctx;
+        ctx.globalAlpha = alpha ?? 1;
+        ctx.fillStyle = color;
+        ctx.fillRect(cx+1, cy+1, CELL-2, CELL-2);
+        ctx.fillStyle = 'rgba(255,255,255,0.28)';
+        ctx.fillRect(cx+1, cy+1, CELL-2, 3);
+        ctx.fillRect(cx+1, cy+1, 3, CELL-2);
+        ctx.fillStyle = 'rgba(0,0,0,0.32)';
+        ctx.fillRect(cx+1, cy+CELL-4, CELL-2, 3);
+        ctx.fillRect(cx+CELL-4, cy+1, 3, CELL-2);
+        ctx.globalAlpha = 1;
+    }
+
+    draw() {
+        const ctx = this.ctx;
+        const W = COLS*CELL, H = ROWS*CELL;
+        ctx.fillStyle = '#06060e';
+        ctx.fillRect(0, 0, W, H);
+        ctx.strokeStyle = 'rgba(255,255,255,0.035)';
+        ctx.lineWidth = 1;
+        for (let r = 1; r < ROWS; r++) { ctx.beginPath(); ctx.moveTo(0,r*CELL); ctx.lineTo(W,r*CELL); ctx.stroke(); }
+        for (let c = 1; c < COLS; c++) { ctx.beginPath(); ctx.moveTo(c*CELL,0); ctx.lineTo(c*CELL,H); ctx.stroke(); }
+        for (let r = 0; r < ROWS; r++)
+            for (let c = 0; c < COLS; c++)
+                if (this.board[r][c]) this._drawCell(c*CELL, r*CELL, this.board[r][c]);
+        if (!this.gameOver) {
+            const gy = this._ghostY();
+            const {shape, x, y, color} = this.cur;
+            if (gy !== y)
+                for (let r = 0; r < shape.length; r++)
+                    for (let c = 0; c < shape[r].length; c++)
+                        if (shape[r][c] && gy+r >= 0) this._drawCell((x+c)*CELL, (gy+r)*CELL, color, 0.14);
+            for (let r = 0; r < shape.length; r++)
+                for (let c = 0; c < shape[r].length; c++)
+                    if (shape[r][c] && y+r >= 0) this._drawCell((x+c)*CELL, (y+r)*CELL, color);
+        } else {
+            ctx.fillStyle = 'rgba(0,0,0,0.78)';
+            ctx.fillRect(0, 0, W, H);
+            ctx.font = 'bold 30px Courier New';
+            ctx.fillStyle = '#ff4757';
+            ctx.textAlign = 'center';
+            ctx.fillText('GAME', W/2, H/2-20);
+            ctx.fillText('OVER', W/2, H/2+20);
+        }
+    }
+}
+
+// ══════════════════════════════════════════════════
+// BOARD ADVERSAIRE (affichage uniquement)
+// ══════════════════════════════════════════════════
+const oppCtx = document.getElementById('c-opp').getContext('2d');
+let oppBoardData = Array.from({length: ROWS}, () => Array(COLS).fill(null));
+let oppCur = null;
+
+function drawOppBoard() {
+    const W = COLS*CELL, H = ROWS*CELL;
+    oppCtx.fillStyle = '#06060e';
+    oppCtx.fillRect(0, 0, W, H);
+    oppCtx.strokeStyle = 'rgba(255,255,255,0.035)';
+    oppCtx.lineWidth = 1;
+    for (let r = 1; r < ROWS; r++) { oppCtx.beginPath(); oppCtx.moveTo(0,r*CELL); oppCtx.lineTo(W,r*CELL); oppCtx.stroke(); }
+    for (let c = 1; c < COLS; c++) { oppCtx.beginPath(); oppCtx.moveTo(c*CELL,0); oppCtx.lineTo(c*CELL,H); oppCtx.stroke(); }
+    for (let r = 0; r < ROWS; r++)
+        for (let c = 0; c < COLS; c++)
+            if (oppBoardData[r][c]) drawOppCell(c*CELL, r*CELL, oppBoardData[r][c]);
+    if (oppCur) {
+        const {shape, x, y, color} = oppCur;
+        for (let r = 0; r < shape.length; r++)
+            for (let c = 0; c < shape[r].length; c++)
+                if (shape[r][c] && y+r >= 0) drawOppCell((x+c)*CELL, (y+r)*CELL, color);
+    }
+}
+
+function drawOppCell(cx, cy, color) {
+    oppCtx.globalAlpha = 1;
+    oppCtx.fillStyle = color;
+    oppCtx.fillRect(cx+1, cy+1, CELL-2, CELL-2);
+    oppCtx.fillStyle = 'rgba(255,255,255,0.28)';
+    oppCtx.fillRect(cx+1, cy+1, CELL-2, 3);
+    oppCtx.fillRect(cx+1, cy+1, 3, CELL-2);
+    oppCtx.fillStyle = 'rgba(0,0,0,0.32)';
+    oppCtx.fillRect(cx+1, cy+CELL-4, CELL-2, 3);
+    oppCtx.fillRect(cx+CELL-4, cy+1, 3, CELL-2);
+}
+
+// ══════════════════════════════════════════════════
+// ÉTAT DU JEU
+// ══════════════════════════════════════════════════
+let myGame = null;
+let running = false, over = false;
+let animId, lastTs;
+
+function updateMyUI() {
+    document.getElementById('score-me').textContent  = myGame.score;
+    document.getElementById('level-me').textContent  = myGame.level;
+    document.getElementById('lines-me').textContent  = myGame.lines;
+}
+
+function showAtkFlash(who) {
+    const el = document.getElementById('atk-' + who);
+    el.style.opacity = 1;
+    setTimeout(() => el.style.opacity = 0, 700);
+}
+
+function gameLoop(ts) {
+    if (!running || over) return;
+    const dt = ts - (lastTs || ts);
+    lastTs = ts;
+    myGame.update(dt);
+    myGame.draw();
+    drawOppBoard();
+    if (myGame.gameOver) {
+        over = true; running = false;
+        socket.emit('tetris_gameover', { code: roomCode, score: myGame.score });
+        showResult(false);
+        return;
+    }
+    animId = requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+    if (animId) cancelAnimationFrame(animId);
+    myGame = new Game('c-me');
+    oppBoardData = Array.from({length: ROWS}, () => Array(COLS).fill(null));
+    oppCur = null;
+    running = true; over = false;
+    document.getElementById('bottom-bar-wrap').style.display = 'block';
+    lastTs = null;
+    animId = requestAnimationFrame(gameLoop);
+}
+
+// ══════════════════════════════════════════════════
+// CONTRÔLES CLAVIER
+// ══════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+    if (!running || over || !myGame) return;
+    switch(e.key) {
+        case 'ArrowLeft':  e.preventDefault(); myGame.moveLeft();  myGame.draw(); break;
+        case 'ArrowRight': e.preventDefault(); myGame.moveRight(); myGame.draw(); break;
+        case 'ArrowDown':  e.preventDefault(); myGame.softDrop();  myGame.draw(); break;
+        case 'ArrowUp':    e.preventDefault(); myGame.rotate();    myGame.draw(); break;
+        case ' ':          e.preventDefault(); myGame.hardDrop();  myGame.draw(); break;
+    }
+});
+
+// ══════════════════════════════════════════════════
+// BOUTONS TACTILES
+// ══════════════════════════════════════════════════
+function bindBtn(id, action) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const doAction = () => { if (!running || over || !myGame) return; action(); myGame.draw(); };
+    el.addEventListener('pointerdown', e => { e.preventDefault(); el.classList.add('pressed'); doAction(); });
+    el.addEventListener('pointerup',   () => el.classList.remove('pressed'));
+    el.addEventListener('pointerleave',() => el.classList.remove('pressed'));
+}
+
+// Répétition sur maintien pour gauche/droite/bas
+function bindRepeat(id, action, delay=120) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let interval = null;
+    const doAction = () => { if (!running || over || !myGame) return; action(); myGame.draw(); };
+    el.addEventListener('pointerdown', e => {
+        e.preventDefault(); el.classList.add('pressed');
+        doAction();
+        interval = setInterval(doAction, delay);
+    });
+    const stop = () => { el.classList.remove('pressed'); clearInterval(interval); };
+    el.addEventListener('pointerup',    stop);
+    el.addEventListener('pointerleave', stop);
+}
+
+bindRepeat('me-left',  () => myGame.moveLeft());
+bindRepeat('me-right', () => myGame.moveRight());
+bindRepeat('me-down',  () => myGame.softDrop(), 80);
+bindBtn('me-rot', () => myGame.rotate());
+
+// ══════════════════════════════════════════════════
+// SOCKET EVENTS
+// ══════════════════════════════════════════════════
+socket.on('tetris_rooms', (rooms) => {
+    const list  = document.getElementById('rooms-list');
+    const empty = document.getElementById('rooms-empty');
+    // Supprimer les anciens items
+    list.querySelectorAll('.room-item').forEach(el => el.remove());
+    if (rooms.length === 0) {
+        empty.style.display = 'block';
+    } else {
+        empty.style.display = 'none';
+        rooms.forEach(r => {
+            const el = document.createElement('div');
+            el.className = 'room-item';
+            el.innerHTML = `<div class="room-creator"><span>SALLE DE</span>${r.creator}</div>
+                <button class="btn-join" onclick="rejoindrePublique('${r.id}')">REJOINDRE</button>`;
+            list.appendChild(el);
+        });
+    }
+});
+
+socket.on('tetris_created', ({ id, code, isPrivate }) => {
+    roomCode = id;
+    if (isPrivate) {
+        document.getElementById('wait-public-msg').style.display  = 'none';
+        document.getElementById('wait-private-wrap').style.display = 'flex';
+        document.getElementById('room-code-display').textContent   = code;
+    } else {
+        document.getElementById('wait-public-msg').style.display  = 'block';
+        document.getElementById('wait-private-wrap').style.display = 'none';
+    }
+    showScreen('wait-screen');
+});
+
+socket.on('tetris_error', msg => {
+    document.getElementById('rooms-error').textContent  = msg;
+    document.getElementById('create-error').textContent = msg;
+});
+
+socket.on('tetris_start', ({ opponent }) => {
+    oppPseudo = opponent;
+    document.getElementById('my-label').textContent  = monPseudo.toUpperCase();
+    document.getElementById('opp-label').textContent = opponent.toUpperCase();
+    document.getElementById('vs-label').textContent  = monPseudo + ' VS ' + opponent;
+    showScreen('countdown-screen');
+    countdown(3);
+});
+
+socket.on('tetris_board', ({ board, cur, score, level, lines }) => {
+    oppBoardData = board;
+    oppCur = cur;
+    document.getElementById('score-opp').textContent = score;
+    document.getElementById('level-opp').textContent = level;
+    document.getElementById('lines-opp').textContent = lines;
+});
+
+socket.on('tetris_garbage', ({ lines }) => {
+    if (running && !over && myGame) {
+        myGame.addGarbage(lines);
+        showAtkFlash('me');
+    }
+});
+
+socket.on('tetris_win', () => {
+    if (!over) { over = true; running = false; showResult(true); }
+});
+
+socket.on('tetris_abandon', () => {
+    if (!over) { over = true; running = false; showResult(true, true); }
+});
+
+// ══════════════════════════════════════════════════
+// LOBBY ACTIONS
+// ══════════════════════════════════════════════════
+function validerPseudo() {
+    monPseudo = document.getElementById('pseudo-input').value.trim();
+    if (!monPseudo) { document.getElementById('pseudo-error').textContent = 'Entre un pseudo'; return; }
+    document.getElementById('pseudo-error').textContent = '';
+    socket.emit('tetris_get_rooms');
+    showScreen('rooms-screen');
+}
+
+function showCreateScreen() {
+    document.getElementById('create-error').textContent = '';
+    showScreen('create-screen');
+}
+
+function creerSalle() {
+    const isPrivate = document.getElementById('private-check').checked;
+    document.getElementById('create-error').textContent = '';
+    socket.emit('tetris_create', { pseudo: monPseudo, isPrivate });
+}
+
+function rejoindrePublique(id) {
+    document.getElementById('rooms-error').textContent = '';
+    socket.emit('tetris_join', { pseudo: monPseudo, id });
+}
+
+function rejoindrePrivee() {
+    const code = document.getElementById('code-input').value.trim().toUpperCase();
+    if (code.length !== 4) { document.getElementById('rooms-error').textContent = 'Code invalide (4 lettres)'; return; }
+    document.getElementById('rooms-error').textContent = '';
+    socket.emit('tetris_join_private', { pseudo: monPseudo, code });
+}
+
+function annulerSalle() {
+    socket.emit('disconnect');
+    retourLobby();
+}
+
+function retourLobby() {
+    if (animId) cancelAnimationFrame(animId);
+    roomCode = ''; oppPseudo = '';
+    oppBoardData = Array.from({length: ROWS}, () => Array(COLS).fill(null));
+    oppCur = null; running = false; over = false;
+    document.getElementById('bottom-bar-wrap').style.display = 'none';
+    document.getElementById('message').textContent = '';
+    document.getElementById('private-check').checked = false;
+    socket.emit('tetris_get_rooms');
+    showScreen('rooms-screen');
+}
+
+function rejouer() { retourLobby(); }
+
+// ══════════════════════════════════════════════════
+// COMPTE À REBOURS
+// ══════════════════════════════════════════════════
+function countdown(n) {
+    showScreen('countdown-screen');
+    document.getElementById('countdown-num').textContent = n === 0 ? 'GO !' : String(n);
+    if (n > 0) setTimeout(() => countdown(n - 1), 900);
+    else setTimeout(() => { showScreen('game-screen'); startGame(); }, 500);
+}
+
+// ══════════════════════════════════════════════════
+// RÉSULTAT
+// ══════════════════════════════════════════════════
+function showResult(win, abandon) {
+    if (animId) cancelAnimationFrame(animId);
+    const title   = document.getElementById('result-title');
+    const details = document.getElementById('result-details');
+    if (win) {
+        title.textContent = 'VICTOIRE !';
+        title.className = 'result-title win';
+        details.textContent = abandon ? oppPseudo + ' a abandonné' : 'Score : ' + (myGame ? myGame.score : 0);
+    } else {
+        title.textContent = 'DÉFAITE';
+        title.className = 'result-title lose';
+        details.textContent = 'Score : ' + (myGame ? myGame.score : 0);
+    }
+    setTimeout(() => showScreen('result-screen'), 800);
+}
+
+// ══════════════════════════════════════════════════
+// UTILITAIRE
+// ══════════════════════════════════════════════════
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+// Init visuel
+const initCtx = document.getElementById('c-me').getContext('2d');
+initCtx.fillStyle = '#06060e';
+initCtx.fillRect(0, 0, 250, 500);
+drawOppBoard();
+</script>
+</body>
+</html>
