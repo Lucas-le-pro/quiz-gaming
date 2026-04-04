@@ -437,7 +437,7 @@ class Game {
                     this.board[y + r][x + c] = color;
         const cleared = this._clearLines();
         // Envoyer garbage à l'adversaire
-        const garbage = [0, 0, 1, 2, 4][Math.min(cleared, 4)];
+        const garbage = cleared;
         if (garbage > 0) {
             socket.emit('tetris_garbage', { code: roomCode, lines: garbage });
             showAtkFlash('me');
