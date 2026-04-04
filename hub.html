@@ -615,7 +615,7 @@
           </div>
         `).join('');
         liste.querySelectorAll('.ami-item').forEach(el => {
-          el.addEventListener('click', () => ouvrirProfil(el.dataset.ami));
+          el.addEventListener('click', () => ouvrirProfil(el.dataset.ami, true));
         });
       }
     }
@@ -663,8 +663,8 @@
         const estEnLigne = !!j.url;
         return `
           <div class="jeu-attente-card ${estEnLigne ? 'en-ligne' : ''}" id="jeu-${j.id}"
-            ${estEnLigne ? `onclick="window.open('${j.url}', '_blank')"` : `onclick="ouvrirProfil('${j.proposePar}')"`}>
-            ${estCreateur && !estEnLigne ? `<button class="btn-trois-points" onclick="event.stopPropagation(); ouvrirUrlModal('${j.id}', '${j.nom}')">···</button>` : ''}
+            data-url="${estEnLigne ? j.url : ''}" data-createur="${j.proposePar}" data-enligne="${estEnLigne}">
+            ${estCreateur && !estEnLigne ? `<button class="btn-trois-points" data-id="${j.id}" data-nom="${j.nom}">···</button>` : ''}
             <div class="jeu-attente-nom">${j.nom}</div>
             ${j.description ? `<div class="jeu-attente-desc">${j.description}</div>` : ''}
             <div class="jeu-attente-par">Proposé par ${j.proposePar}</div>
@@ -672,6 +672,20 @@
           </div>
         `;
       }).join('');
+
+      liste.querySelectorAll('.jeu-attente-card').forEach(el => {
+        el.addEventListener('click', () => {
+          if (el.dataset.enligne === 'true') window.open(el.dataset.url, '_blank');
+          else ouvrirProfil(el.dataset.createur, false);
+        });
+      });
+
+      liste.querySelectorAll('.btn-trois-points').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          ouvrirUrlModal(btn.dataset.id, btn.dataset.nom);
+        });
+      });
     }
 
     socket.on('nouveau-jeu', () => chargerJeux());
@@ -747,10 +761,11 @@
 
 
     // ---- PROFIL AMI ----
-    async function ouvrirProfil(ami) {
+    async function ouvrirProfil(ami, avecChat = false) {
       document.getElementById('profil-pseudo').textContent = ami;
       document.getElementById('profil-avatar').textContent = ami[0].toUpperCase();
       document.getElementById('profil-stats').innerHTML = '<p class="profil-aucun-stat">Chargement...</p>';
+      document.getElementById('profil-chat').style.display = avecChat ? '' : 'none';
       document.getElementById('profil-overlay').classList.add('active');
 
       // Charger les stats
