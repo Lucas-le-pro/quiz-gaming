@@ -609,11 +609,14 @@
         liste.innerHTML = '<p style="color:#555; font-size:0.85rem;">Aucun ami pour l\'instant.</p>';
       } else {
         liste.innerHTML = amis.map(a => `
-          <div class="ami-item" onclick="ouvrirProfil('${a}')">
+          <div class="ami-item" data-ami="${a}">
             <strong>${a}</strong>
             <span>Voir le profil</span>
           </div>
         `).join('');
+        liste.querySelectorAll('.ami-item').forEach(el => {
+          el.addEventListener('click', () => ouvrirProfil(el.dataset.ami));
+        });
       }
     }
 
