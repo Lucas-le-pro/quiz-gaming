@@ -639,7 +639,13 @@
     });
 
     socket.on('friends-status', (statuses) => {
-      Object.entries(statuses).forEach(([p, s]) => { friendsStatus[p] = s; });
+      Object.entries(statuses).forEach(([p, s]) => {
+        friendsStatus[p] = s;
+        document.querySelectorAll(`.statut-dot[data-pseudo="${p}"]`).forEach(dot => {
+          dot.className = `statut-dot ${s.status}`;
+          dot.title = s.status === 'in-game' ? `En jeu : ${s.jeu}` : s.status === 'online' ? 'En ligne' : 'Hors ligne';
+        });
+      });
     });
 
     // ---- INVITATION JEU REÇUE ----
