@@ -216,76 +216,6 @@
     }
     .btn-trois-points:hover { background: #2a2a3a; color: #fff; }
 
-    /* MODAL INVITE JEU */
-    #invite-jeu-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 900;
-      align-items: center;
-      justify-content: center;
-    }
-    #invite-jeu-overlay.active { display: flex; }
-    .invite-jeu-card {
-      background: #13131a;
-      border: 1px solid #2a2a3a;
-      border-radius: 16px;
-      padding: 28px;
-      width: 360px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      max-height: 70vh;
-      overflow-y: auto;
-    }
-    .invite-jeu-card h3 { color: #ccc; font-size: 1rem; }
-    .invite-jeu-ami {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #0a0a0f;
-      border: 1px solid #2a2a3a;
-      border-radius: 10px;
-      padding: 10px 14px;
-    }
-    .invite-jeu-ami-info { display: flex; align-items: center; gap: 10px; }
-    .statut-dot {
-      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-    }
-    .statut-dot.offline  { background: #ef4444; }
-    .statut-dot.online   { background: #22c55e; }
-    .statut-dot.in-game  { background: #f97316; }
-    .btn-inviter-jeu {
-      padding: 6px 14px; border-radius: 8px; border: none;
-      font-weight: 700; font-size: 0.82rem; cursor: pointer; letter-spacing: 1px;
-    }
-    .btn-inviter-jeu.online  { background: #22c55e; color: #000; }
-    .btn-inviter-jeu.in-game { background: #f97316; color: #000; }
-    .invite-jeu-fermer { color: #666; font-size: 0.85rem; cursor: pointer; text-align: center; }
-    .invite-jeu-fermer:hover { color: #fff; }
-
-    /* NOTIF INVITATION JEU */
-    #notif-jeu {
-      display: none;
-      position: fixed;
-      top: 60px; left: 50%; transform: translateX(-50%);
-      background: #13131a;
-      border: 1px solid #a855f7;
-      border-radius: 12px;
-      padding: 16px 22px;
-      z-index: 1000;
-      flex-direction: column;
-      gap: 10px;
-      align-items: center;
-      text-align: center;
-      min-width: 280px;
-      box-shadow: 0 0 30px rgba(168,85,247,0.3);
-    }
-    #notif-jeu.active { display: flex; }
-    #notif-jeu p { font-size: 0.9rem; color: #ccc; }
-    #notif-jeu strong { color: #a855f7; }
-
     /* MODAL URL */
     #url-overlay {
       display: none;
@@ -468,6 +398,111 @@
     .chat-input-row { display: flex; gap: 8px; padding: 10px; border-top: 1px solid #2a2a3a; }
     .chat-input-row input { flex: 1; padding: 8px 12px; font-size: 0.9rem; }
     .chat-input-row button { padding: 8px 14px; font-size: 0.85rem; }
+
+    /* CHAT DE GROUPE */
+    #groupe-panel {
+      position: fixed;
+      bottom: 0; left: 20px;
+      width: 320px;
+      background: #13131a;
+      border: 1px solid #2a2a3a;
+      border-bottom: none;
+      border-radius: 12px 12px 0 0;
+      display: none;
+      flex-direction: column;
+      z-index: 500;
+    }
+    #groupe-panel.active { display: flex; }
+    .groupe-header {
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #6366f1, #0ea5e9);
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .groupe-header .close { cursor: pointer; font-size: 1.1rem; }
+
+    /* BOUTON GROUPE (toggle) */
+    #btn-groupe-toggle {
+      position: fixed;
+      bottom: 20px; left: 20px;
+      background: linear-gradient(135deg, #6366f1, #0ea5e9);
+      border: none;
+      border-radius: 50px;
+      padding: 10px 18px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      z-index: 499;
+      display: none;
+    }
+    #btn-groupe-toggle.visible { display: block; }
+
+    /* LIKES / DISLIKES */
+    .jeu-votes {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .vote-btn {
+      background: #1a1a2a;
+      border: 1px solid #2a2a3a;
+      border-radius: 20px;
+      padding: 4px 10px;
+      color: #888;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .vote-btn:hover { border-color: #7c3aed; color: #fff; }
+    .vote-btn.active-like { border-color: #4ade80; color: #4ade80; background: #0a2a1a; }
+    .vote-btn.active-dislike { border-color: #f87171; color: #f87171; background: #2a0a0a; }
+
+    /* COMMENTAIRES */
+    .jeu-comments-toggle {
+      font-size: 0.78rem;
+      color: #666;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .jeu-comments-toggle:hover { color: #a855f7; }
+    .jeu-comments-section {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+      border-top: 1px solid #2a2a3a;
+      padding-top: 8px;
+    }
+    .jeu-comments-section.open { display: flex; }
+    .comment-item {
+      font-size: 0.82rem;
+      color: #bbb;
+      line-height: 1.4;
+    }
+    .comment-item .comment-auteur { color: #a855f7; font-weight: 700; margin-right: 5px; }
+    .comment-input-row { display: flex; gap: 6px; margin-top: 4px; }
+    .comment-input-row input { flex: 1; font-size: 0.82rem; padding: 6px 10px; }
+    .comment-input-row button { padding: 6px 12px; font-size: 0.8rem; }
+
+    /* BARRE DE RECHERCHE */
+    .search-bar {
+      background: #0a0a0f;
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      padding: 10px 16px;
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+      width: 100%;
+      transition: border 0.2s;
+    }
+    .search-bar:focus { border-color: #7c3aed; }
+    .search-bar::placeholder { color: #444; }
   </style>
 </head>
 <body>
@@ -532,6 +567,7 @@
     <!-- JEUX EN ATTENTE -->
     <div class="hub-section">
       <h3>Jeux en attente</h3>
+      <input type="text" class="search-bar" id="jeux-search" placeholder="Rechercher un jeu ou un créateur...">
       <input type="text" id="jeu-nom" placeholder="Nom du jeu" maxlength="40">
       <textarea id="jeu-desc" placeholder="Description (facultatif)" rows="2"></textarea>
       <button class="main" id="btn-proposer">Proposer un jeu</button>
@@ -541,24 +577,6 @@
       </div>
     </div>
 
-  </div>
-
-  <!-- NOTIF INVITATION JEU -->
-  <div id="notif-jeu">
-    <p id="notif-jeu-texte"><strong id="notif-jeu-de"></strong> t'invite à jouer à <strong id="notif-jeu-nom"></strong></p>
-    <div style="display:flex;gap:10px;">
-      <button class="main" id="notif-jeu-accepter" style="padding:8px 18px;font-size:0.85rem;">Rejoindre</button>
-      <button id="notif-jeu-refuser" style="padding:8px 18px;border-radius:8px;border:1px solid #444;background:none;color:#888;cursor:pointer;font-size:0.85rem;">Ignorer</button>
-    </div>
-  </div>
-
-  <!-- MODAL INVITE JEU -->
-  <div id="invite-jeu-overlay">
-    <div class="invite-jeu-card">
-      <h3>Inviter un ami à jouer à <span id="invite-jeu-titre"></span></h3>
-      <div id="invite-jeu-liste"></div>
-      <div class="invite-jeu-fermer" id="invite-jeu-fermer">Fermer</div>
-    </div>
   </div>
 
   <!-- MODAL UPLOAD -->
@@ -582,6 +600,20 @@
       <div class="profil-stats" id="profil-stats"></div>
       <button class="main" id="profil-chat" style="width:100%;">Ouvrir le chat</button>
       <div class="profil-fermer" id="profil-fermer">Fermer</div>
+    </div>
+  </div>
+
+  <!-- CHAT DE GROUPE -->
+  <button id="btn-groupe-toggle">Chat global</button>
+  <div id="groupe-panel">
+    <div class="groupe-header" id="groupe-header">
+      <span>Chat global</span>
+      <span class="close" id="groupe-close">✕</span>
+    </div>
+    <div class="chat-messages" id="groupe-messages"></div>
+    <div class="chat-input-row">
+      <input type="text" id="groupe-input" placeholder="Message...">
+      <button class="main" id="groupe-envoyer">Envoyer</button>
     </div>
   </div>
 
@@ -609,10 +641,7 @@
     const socket = io(SERVER);
     let amiActif = null;
 
-    socket.on('connect', () => {
-      socket.emit('rejoindre', pseudo);
-      socket.emit('set-status', { pseudo, status: 'online' });
-    });
+    socket.on('connect', () => socket.emit('rejoindre', pseudo));
 
     // Invitation en temps réel
     socket.on('invitation', ({ de }) => afficherNotif(de));
@@ -623,101 +652,6 @@
     // Nouveau message
     socket.on('nouveau-message', ({ avec, msg }) => {
       if (avec === amiActif) afficherMessage(msg);
-    });
-
-    // ---- STATUTS ----
-    const friendsStatus = {};
-
-    socket.on('status-update', ({ pseudo: p, status, jeu }) => {
-      friendsStatus[p] = { status, jeu };
-      // Mettre à jour le point de statut si visible dans la liste
-      const dot = document.querySelector(`.statut-dot[data-pseudo="${p}"]`);
-      if (dot) {
-        dot.className = `statut-dot ${status}`;
-        dot.title = status === 'in-game' ? `En jeu : ${jeu}` : status === 'online' ? 'En ligne' : 'Hors ligne';
-      }
-    });
-
-    socket.on('friends-status', (statuses) => {
-      Object.entries(statuses).forEach(([p, s]) => {
-        friendsStatus[p] = s;
-        document.querySelectorAll(`.statut-dot[data-pseudo="${p}"]`).forEach(dot => {
-          dot.className = `statut-dot ${s.status}`;
-          dot.title = s.status === 'in-game' ? `En jeu : ${s.jeu}` : s.status === 'online' ? 'En ligne' : 'Hors ligne';
-        });
-      });
-    });
-
-    // ---- INVITATION JEU REÇUE ----
-    socket.on('invitation-jeu', ({ de, jeu, url }) => {
-      document.getElementById('notif-jeu-de').textContent = de;
-      document.getElementById('notif-jeu-nom').textContent = jeu;
-      document.getElementById('notif-jeu').classList.add('active');
-
-      document.getElementById('notif-jeu-accepter').onclick = () => {
-        document.getElementById('notif-jeu').classList.remove('active');
-        window.open(url, '_blank');
-      };
-      document.getElementById('notif-jeu-refuser').onclick = () => {
-        document.getElementById('notif-jeu').classList.remove('active');
-      };
-      setTimeout(() => document.getElementById('notif-jeu').classList.remove('active'), 20000);
-    });
-
-    // ---- MODAL INVITE JEU ----
-    let inviteJeuNom = '', inviteJeuUrl = '';
-
-    function ouvrirInviteJeu(nom, url) {
-      inviteJeuNom = nom;
-      inviteJeuUrl = url;
-      document.getElementById('invite-jeu-titre').textContent = nom;
-      const liste = document.getElementById('invite-jeu-liste');
-
-      // Demander les statuts des amis
-      fetch(`${SERVER}/amis/${pseudo}`)
-        .then(r => r.json())
-        .then(amis => {
-          socket.emit('get-friends-status', { amis });
-          setTimeout(() => {
-            if (amis.length === 0) {
-              liste.innerHTML = '<p style="color:#555;font-size:0.85rem;">Aucun ami pour l\'instant.</p>';
-            } else {
-              liste.innerHTML = amis.map(a => {
-                const s = friendsStatus[a] || { status: 'offline', jeu: null };
-                const btnHtml = s.status !== 'offline'
-                  ? `<button class="btn-inviter-jeu ${s.status}" data-ami="${a}">${s.status === 'in-game' ? 'En jeu' : 'Inviter'}</button>`
-                  : '';
-                return `
-                  <div class="invite-jeu-ami">
-                    <div class="invite-jeu-ami-info">
-                      <div class="statut-dot ${s.status}" data-pseudo="${a}" title="${s.status === 'in-game' ? 'En jeu : ' + s.jeu : s.status === 'online' ? 'En ligne' : 'Hors ligne'}"></div>
-                      <span>${a}</span>
-                    </div>
-                    ${btnHtml}
-                  </div>
-                `;
-              }).join('');
-
-              liste.querySelectorAll('.btn-inviter-jeu').forEach(btn => {
-                btn.addEventListener('click', () => {
-                  socket.emit('invite-jeu', { de: pseudo, a: btn.dataset.ami, jeu: inviteJeuNom, url: inviteJeuUrl });
-                  btn.textContent = '✓ Envoyé';
-                  btn.disabled = true;
-                });
-              });
-            }
-          }, 300);
-        });
-
-      document.getElementById('invite-jeu-overlay').classList.add('active');
-    }
-
-    document.getElementById('invite-jeu-fermer').addEventListener('click', () => {
-      document.getElementById('invite-jeu-overlay').classList.remove('active');
-    });
-    document.getElementById('invite-jeu-overlay').addEventListener('click', e => {
-      if (e.target === document.getElementById('invite-jeu-overlay'))
-        document.getElementById('invite-jeu-overlay').classList.remove('active');
     });
 
     // ---- LANGUE ----
@@ -751,6 +685,7 @@
       document.getElementById('onboarding').style.display = 'none';
       document.getElementById('hub').classList.add('active');
       document.getElementById('hub-pseudo').textContent = pseudo;
+      document.getElementById('btn-groupe-toggle').classList.add('visible');
       chargerAmis();
       chargerJeux();
       if (invitePseudo) verifierInvitation(invitePseudo);
@@ -794,22 +729,12 @@
       if (amis.length === 0) {
         liste.innerHTML = '<p style="color:#555; font-size:0.85rem;">Aucun ami pour l\'instant.</p>';
       } else {
-        socket.emit('get-friends-status', { amis });
-        liste.innerHTML = amis.map(a => {
-          const s = friendsStatus[a] || { status: 'offline' };
-          return `
-            <div class="ami-item" data-ami="${a}">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <div class="statut-dot ${s.status}" data-pseudo="${a}"></div>
-                <strong>${a}</strong>
-              </div>
-              <span>Voir le profil</span>
-            </div>
-          `;
-        }).join('');
-        liste.querySelectorAll('.ami-item').forEach(el => {
-          el.addEventListener('click', () => ouvrirProfil(el.dataset.ami, true));
-        });
+        liste.innerHTML = amis.map(a => `
+          <div class="ami-item" onclick="ouvrirProfil('${a}')">
+            <strong>${a}</strong>
+            <span>Voir le profil</span>
+          </div>
+        `).join('');
       }
     }
 
@@ -839,11 +764,12 @@
     // ---- JEUX EN ATTENTE ----
     async function chargerJeux() {
       const res = await fetch(`${SERVER}/jeux`);
-      const jeux = await res.json();
-      afficherJeux(jeux);
+      tousLesJeux = await res.json();
+      filtrerEtAfficher();
     }
 
     let jeuEnCoursId = null;
+    let tousLesJeux = [];
 
     function afficherJeux(jeux) {
       const liste = document.getElementById('jeux-liste');
@@ -854,43 +780,93 @@
       liste.innerHTML = jeux.map(j => {
         const estCreateur = j.proposePar === pseudo;
         const estEnLigne = !!j.url;
+        const likes = j.likes || [];
+        const dislikes = j.dislikes || [];
+        const aLike = likes.includes(pseudo);
+        const aDislike = dislikes.includes(pseudo);
+        const nbComments = (j.commentaires || []).length;
         return `
-          <div class="jeu-attente-card ${estEnLigne ? 'en-ligne' : ''}" id="jeu-${j.id}"
-            data-url="${estEnLigne ? j.url : ''}" data-createur="${j.proposePar}" data-enligne="${estEnLigne}" data-nom="${j.nom}">
-            ${estCreateur && !estEnLigne ? `<button class="btn-trois-points" data-id="${j.id}" data-nom="${j.nom}">···</button>` : ''}
-            ${estEnLigne ? `<button class="btn-trois-points" style="color:#a855f7;" data-invite-nom="${j.nom}" data-invite-url="${j.url}">👥</button>` : ''}
-            <div class="jeu-attente-nom">${j.nom}</div>
+          <div class="jeu-attente-card ${estEnLigne ? 'en-ligne' : ''}" id="jeu-${j.id}">
+            ${estCreateur && !estEnLigne ? `<button class="btn-trois-points" onclick="event.stopPropagation(); ouvrirUrlModal('${j.id}', '${j.nom}')">···</button>` : ''}
+            <div class="jeu-attente-nom" style="cursor:pointer" onclick="${estEnLigne ? `window.open('${j.url}', '_blank')` : `ouvrirProfil('${j.proposePar}')`}">${j.nom}</div>
             ${j.description ? `<div class="jeu-attente-desc">${j.description}</div>` : ''}
             <div class="jeu-attente-par">Proposé par ${j.proposePar}</div>
             <div class="jeu-attente-badge ${estEnLigne ? 'live' : ''}">${estEnLigne ? 'En ligne' : 'En attente'}</div>
+            <div class="jeu-votes">
+              <button class="vote-btn ${aLike ? 'active-like' : ''}" onclick="voterJeu('${j.id}', 'like')">+1 ${likes.length}</button>
+              <button class="vote-btn ${aDislike ? 'active-dislike' : ''}" onclick="voterJeu('${j.id}', 'dislike')">-1 ${dislikes.length}</button>
+            </div>
+            <div class="jeu-comments-toggle" onclick="toggleComments('${j.id}')">
+              ${nbComments > 0 ? `${nbComments} commentaire${nbComments > 1 ? 's' : ''}` : 'Ajouter un commentaire'}
+            </div>
+            <div class="jeu-comments-section" id="comments-${j.id}">
+              <div id="comments-list-${j.id}">
+                ${(j.commentaires || []).map(c => `<div class="comment-item"><span class="comment-auteur">${c.pseudo}</span>${c.texte}</div>`).join('')}
+              </div>
+              <div class="comment-input-row">
+                <input type="text" id="comment-input-${j.id}" placeholder="Ton commentaire..." maxlength="200">
+                <button class="main" onclick="envoyerCommentaire('${j.id}')">OK</button>
+              </div>
+            </div>
           </div>
         `;
       }).join('');
+    }
 
-      liste.querySelectorAll('.jeu-attente-card').forEach(el => {
-        el.addEventListener('click', () => {
-          if (el.dataset.enligne === 'true') window.open(el.dataset.url, '_blank');
-          else ouvrirProfil(el.dataset.createur, false);
-        });
+    async function voterJeu(id, type) {
+      await fetch(`${SERVER}/jeux/${id}/${type}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pseudo })
       });
+    }
 
-      liste.querySelectorAll('.btn-trois-points[data-id]').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.stopPropagation();
-          ouvrirUrlModal(btn.dataset.id, btn.dataset.nom);
-        });
-      });
+    function toggleComments(id) {
+      const section = document.getElementById(`comments-${id}`);
+      section.classList.toggle('open');
+    }
 
-      liste.querySelectorAll('.btn-trois-points[data-invite-nom]').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.stopPropagation();
-          ouvrirInviteJeu(btn.dataset.inviteNom, btn.dataset.inviteUrl);
-        });
+    async function envoyerCommentaire(id) {
+      const input = document.getElementById(`comment-input-${id}`);
+      const texte = input.value.trim();
+      if (!texte) return;
+      await fetch(`${SERVER}/jeux/${id}/commentaires`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pseudo, texte })
       });
+      input.value = '';
+    }
+
+    socket.on('jeu-votes', ({ id, likes, dislikes }) => {
+      const jeu = tousLesJeux.find(j => j.id === id);
+      if (jeu) { jeu.likes = likes; jeu.dislikes = dislikes; }
+      filtrerEtAfficher();
+    });
+
+    socket.on('nouveau-commentaire', ({ jeuId, comment }) => {
+      const jeu = tousLesJeux.find(j => j.id === jeuId);
+      if (jeu) { jeu.commentaires = [...(jeu.commentaires || []), comment]; }
+      const listEl = document.getElementById(`comments-list-${jeuId}`);
+      if (listEl) {
+        const div = document.createElement('div');
+        div.className = 'comment-item';
+        div.innerHTML = `<span class="comment-auteur">${comment.pseudo}</span>${comment.texte}`;
+        listEl.appendChild(div);
+      }
+    });
+
+    function filtrerEtAfficher() {
+      const q = (document.getElementById('jeux-search')?.value || '').toLowerCase();
+      const filtered = q
+        ? tousLesJeux.filter(j => j.nom.toLowerCase().includes(q) || j.proposePar.toLowerCase().includes(q))
+        : tousLesJeux;
+      afficherJeux(filtered);
     }
 
     socket.on('nouveau-jeu', () => chargerJeux());
     socket.on('jeu-mis-en-ligne', () => chargerJeux());
+    document.getElementById('jeux-search').addEventListener('input', filtrerEtAfficher);
 
     // Modal URL
     function ouvrirUrlModal(id, nom) {
@@ -962,11 +938,10 @@
 
 
     // ---- PROFIL AMI ----
-    async function ouvrirProfil(ami, avecChat = false) {
+    async function ouvrirProfil(ami) {
       document.getElementById('profil-pseudo').textContent = ami;
       document.getElementById('profil-avatar').textContent = ami[0].toUpperCase();
       document.getElementById('profil-stats').innerHTML = '<p class="profil-aucun-stat">Chargement...</p>';
-      document.getElementById('profil-chat').style.display = avecChat ? '' : 'none';
       document.getElementById('profil-overlay').classList.add('active');
 
       // Charger les stats
@@ -1011,6 +986,53 @@
     document.getElementById('profil-overlay').addEventListener('click', (e) => {
       if (e.target === document.getElementById('profil-overlay'))
         document.getElementById('profil-overlay').classList.remove('active');
+    });
+
+    // ---- CHAT DE GROUPE ----
+    async function chargerGroupeMessages() {
+      const res = await fetch(`${SERVER}/groupe-messages`);
+      const msgs = await res.json();
+      const box = document.getElementById('groupe-messages');
+      box.innerHTML = '';
+      msgs.forEach(m => afficherGroupeMsg(m));
+    }
+
+    function afficherGroupeMsg(msg) {
+      const div = document.createElement('div');
+      div.className = 'chat-msg' + (msg.de === pseudo ? ' moi' : '');
+      div.innerHTML = `<span class="nom">${msg.de}</span>${msg.texte}`;
+      const box = document.getElementById('groupe-messages');
+      box.appendChild(div);
+      box.scrollTop = 9999;
+    }
+
+    document.getElementById('btn-groupe-toggle').addEventListener('click', () => {
+      document.getElementById('btn-groupe-toggle').classList.remove('visible');
+      document.getElementById('groupe-panel').classList.add('active');
+      chargerGroupeMessages();
+    });
+
+    document.getElementById('groupe-close').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('groupe-panel').classList.remove('active');
+      document.getElementById('btn-groupe-toggle').classList.add('visible');
+    });
+
+    document.getElementById('groupe-envoyer').addEventListener('click', () => {
+      const texte = document.getElementById('groupe-input').value.trim();
+      if (!texte) return;
+      socket.emit('groupe-message', { de: pseudo, texte });
+      document.getElementById('groupe-input').value = '';
+    });
+
+    document.getElementById('groupe-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('groupe-envoyer').click();
+    });
+
+    socket.on('groupe-message', (msg) => {
+      if (document.getElementById('groupe-panel').classList.contains('active')) {
+        afficherGroupeMsg(msg);
+      }
     });
 
     // ---- CHAT ----
